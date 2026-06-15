@@ -39,7 +39,8 @@ dependencies:
   get_it: ^7.6.4
 
   # Audio
-  audioplayers: ^6.7.1
+  audioplayers: ^6.1.0
+  flutter_tts: ^4.0.2
 
   # Animations
   lottie: ^3.1.0
@@ -56,21 +57,13 @@ dependencies:
   google_fonts: ^6.2.1
   flutter_svg: ^2.0.10+1
 
-
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_lints: ^3.0.0
+  bloc_test: ^9.1.5
+  mocktail: ^1.0.3
 
-  flutter_lints: ^6.0.0
-
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
-
-# The following section is specific to Flutter packages.
 flutter:
   uses-material-design: true
 

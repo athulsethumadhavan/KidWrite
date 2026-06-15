@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adaptive icon foreground — 108×108dp canvas, safe zone 18–90dp.
+  Layers (bottom to top):
+    1. White notebook card
+    2. Ruled lines + red margin
+    3. Faded guide A
+    4. Traced coral A
+    5. Horizontal pencil
+    6. KW purple badge
+    7. Accent dots (b / 1 / C colours)
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- ── Card drop-shadow ── -->
+    <path
+        android:fillColor="#1A000000"
+        android:pathData="M24,17 L84,17 Q92,17 92,25 L92,89 Q92,95 84,95 L24,95 Q16,95 16,89 L16,25 Q16,17 24,17 Z" />
+
+    <!-- ── White card ── -->
+    <path
+        android:fillColor="#F9FAFE"
+        android:pathData="M23,15 L85,15 Q91,15 91,21 L91,87 Q91,93 85,93 L23,93 Q17,93 17,87 L17,21 Q17,15 23,15 Z" />
+
+    <!-- ── Notebook ruled lines ── -->
+    <path
+        android:strokeColor="#DEE6F5"
+        android:strokeWidth="0.9"
+        android:fillColor="#00000000"
+        android:pathData="M21,44 L87,44 M21,52 L87,52 M21,60 L87,60 M21,68 L87,68 M21,76 L87,76" />
+
+    <!-- ── Red margin line ── -->
+    <path
+        android:strokeColor="#FF6B6B"
+        android:strokeWidth="1.0"
+        android:strokeAlpha="0.45"
+        android:fillColor="#00000000"
+        android:pathData="M27,15 L27,93" />
+
+    <!-- ── Guide letter A (faded) ── -->
+    <group android:alpha="0.12">
+        <!-- Left diagonal -->
+        <group
+            android:pivotX="54"
+            android:pivotY="46"
+            android:rotation="-18">
+            <path
+                android:fillColor="#4B3FA0"
+                android:pathData="M51.5,24 L56.5,24 L56.5,68 L51.5,68 Z" />
+        </group>
+        <!-- Right diagonal -->
+        <group
+            android:pivotX="54"
+            android:pivotY="46"
+            android:rotation="18">
+            <path
+                android:fillColor="#4B3FA0"
+                android:pathData="M51.5,24 L56.5,24 L56.5,68 L51.5,68 Z" />
+        </group>
+        <!-- Crossbar -->
+        <path
+            android:fillColor="#4B3FA0"
+            android:pathData="M41,50 L67,50 L67,54 L41,54 Z" />
+    </group>
+
+    <!-- ── Traced letter A (coral) ── -->
+    <!-- Left diagonal -->
+    <group
+        android:pivotX="54"
+        android:pivotY="46"
+        android:rotation="-18">
+        <path
+            android:fillColor="#FF6B6B"
+            android:pathData="M51.5,22 L57.5,22 L57.5,70 L51.5,70 Z" />
+    </group>
+    <!-- Right diagonal -->
+    <group
+        android:pivotX="54"
+        android:pivotY="46"
+        android:rotation="18">
+        <path
+            android:fillColor="#FF6B6B"
+            android:pathData="M51.5,22 L57.5,22 L57.5,70 L51.5,70 Z" />
+    </group>
+    <!-- Crossbar -->
+    <path
+        android:fillColor="#FF6B6B"
+        android:pathData="M40,49 L68,49 L68,54 L40,54 Z" />
+
+    <!-- ── Pencil ── -->
+    <!-- Shadow -->
+    <path
+        android:fillColor="#14000000"
+        android:pathData="M21,80 L21,86 L79,86 L82,83 L79,80 Z" />
+    <!-- Eraser (pink rounded cap) -->
+    <path
+        android:fillColor="#FF8FAB"
+        android:pathData="M23,79 A4,4 0 0 0 23,87 L29,87 L29,79 Z" />
+    <!-- Ferrule (silver band) -->
+    <path
+        android:fillColor="#C0CAD8"
+        android:pathData="M29,79 L33,79 L33,87 L29,87 Z" />
+    <!-- Body (yellow) -->
+    <path
+        android:fillColor="#FFD93D"
+        android:pathData="M33,79 L78,79 L78,87 L33,87 Z" />
+    <!-- Highlight stripe -->
+    <path
+        android:fillColor="#FFF0A0"
+        android:fillAlpha="0.65"
+        android:pathData="M33,79 L78,79 L78,82 L33,82 Z" />
+    <!-- Wood tip -->
+    <path
+        android:fillColor="#D4A574"
+        android:pathData="M78,79 L78,87 L85,83 Z" />
+    <!-- Lead -->
+    <path
+        android:fillColor="#2E2E2E"
+        android:pathData="M85,82 L85,84 L89,83 Z" />
+
+    <!-- ── KW monogram badge (top-left) ── -->
+    <path
+        android:fillColor="#6C3FD4"
+        android:pathData="M19,17 L31,17 Q34,17 34,20 L34,30 Q34,33 31,33 L19,33 Q16,33 16,30 L16,20 Q16,17 19,17 Z" />
+    <!-- "K" shape (two diagonals from vertical bar) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,20 L22,20 L22,30 L20,30 Z
+                          M22,25 L28,20 L30,20 L24,25 L30,30 L28,30 Z" />
+
+    <!-- ── Accent dots representing b / 1 / C ── -->
+    <!-- b (teal) — bottom-left, tilted -->
+    <group android:pivotX="25" android:pivotY="65" android:rotation="-18">
+        <path android:fillColor="#4ECDC4" android:fillAlpha="0.85"
+              android:pathData="M25,65 m-7,0 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0" />
+    </group>
+    <!-- 1 (coral) — top-right, tilted -->
+    <group android:pivotX="83" android:pivotY="28" android:rotation="22">
+        <path android:fillColor="#FF6B6B" android:fillAlpha="0.85"
+              android:pathData="M83,28 m-7,0 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0" />
+    </group>
+    <!-- C (violet) — mid-right, tilted -->
+    <group android:pivotX="83" android:pivotY="62" android:rotation="-12">
+        <path android:fillColor="#C084FC" android:fillAlpha="0.85"
+              android:pathData="M83,62 m-7,0 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0" />
+    </group>
+
+    <!-- ── Gold star accent ── -->
+    <path
+        android:fillColor="#FFD93D"
+        android:pathData="M84,20 L85.8,25.5 L91.5,25.5 L87,29 L88.8,34.5 L84,31 L79.2,34.5 L81,29 L76.5,25.5 L82.2,25.5 Z" />
+
+</vector>

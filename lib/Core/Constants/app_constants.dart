@@ -21,7 +21,7 @@ class AppConstants {
   static const double guideStrokeWidth = 3.0;
   static const double canvasPadding = 24.0;
   // Accuracy threshold (0.0–1.0): fraction of guide points hit
-  static const double successThreshold = 0.75;
+  static const double successThreshold = 0.67;
 
   // Layout
   static const double cardBorderRadius = 24.0;

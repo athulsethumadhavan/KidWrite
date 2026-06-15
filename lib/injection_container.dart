@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:kid_write/Core/services/tts_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'data/datasources/character_local_datasource.dart';
@@ -52,4 +53,8 @@ Future<void> initDependencies() async {
         () => ProgressBloc(getProgress: sl(), saveProgress: sl()),
   );
   sl.registerLazySingleton(() => MusicBloc(prefs: sl()));
+
+  // TTS
+  sl.registerLazySingleton(() => TtsService());
 }
+
