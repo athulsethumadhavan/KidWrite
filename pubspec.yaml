@@ -70,6 +70,7 @@ flutter:
   assets:
     - assets/audio/
     - assets/animations/
+    - assets/audio/letters/
 
 #  fonts:
 #    - family: NotoSansMalayalam

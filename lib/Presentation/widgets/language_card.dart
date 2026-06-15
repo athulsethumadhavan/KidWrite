@@ -44,50 +44,54 @@ class LanguageCard extends StatelessWidget {
             ),
           ],
         ),
-        child: Stack(
-          children: [
-            // Large emoji watermark
-            Positioned(
-              right: -10,
-              bottom: -10,
-              child: Text(
-                language.emoji,
-                style: const TextStyle(fontSize: 72),
+        child: ClipRRect(
+          borderRadius:
+          BorderRadius.circular(AppConstants.cardBorderRadius),
+          child: Stack(
+            children: [
+              // Emoji watermark — clipped to card edges
+              Positioned(
+                right: -6,
+                bottom: -6,
+                child: Text(
+                  language.emoji,
+                  style: const TextStyle(fontSize: 50),
+                ),
               ),
-            ),
-            // Content
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    language.nativeName,
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      fontFamily: language.fontFamily == 'Nunito'
-                          ? null
-                          : language.fontFamily,
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      language.nativeName,
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        fontFamily: language.fontFamily == 'Nunito'
+                            ? null
+                            : language.fontFamily,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    language.displayName,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.85),
-                      fontWeight: FontWeight.w600,
+                    const SizedBox(height: 4),
+                    Text(
+                      language.displayName,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.85),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ), // ClipRRect
       ),
     );
   }

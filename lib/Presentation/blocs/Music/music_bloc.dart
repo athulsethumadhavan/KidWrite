@@ -49,7 +49,7 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
       MusicPlaySuccess event, Emitter<MusicState> emit) async {
     if (!state.isSoundEnabled) return;
     try {
-      await _fxPlayer.play(AssetSource(AppConstants.successSoundPath));
+      await _fxPlayer.play(AssetSource(AppConstants.successSoundPath), volume: 0.1);
     } catch (_) {}
   }
 
@@ -64,7 +64,7 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
   Future<void> _startBgMusic() async {
     try {
       await _bgPlayer.setReleaseMode(ReleaseMode.loop);
-      await _bgPlayer.play(AssetSource(AppConstants.bgMusicPath));
+      await _bgPlayer.play(AssetSource(AppConstants.bgMusicPath), volume: 0.05);
     } catch (_) {
       // Audio files may not be present in dev — silently ignore
     }

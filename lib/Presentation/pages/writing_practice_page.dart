@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kid_write/Core/Constants/app_constants.dart';
+import 'package:kid_write/Core/services/letter_audio_service.dart';
 import 'package:kid_write/Core/services/tts_service.dart';
 
 import '../../core/constants/app_colors.dart';
@@ -119,13 +120,10 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
       _confetti.play();
       sl<MusicBloc>().add(const MusicPlaySuccess());
 
-      // After the success jingle (~1.2 s), speak the character name + pronunciation
+      // After the success jingle (~1.2 s), play the pre-recorded pronunciation
       Future.delayed(const Duration(milliseconds: 1200), () {
         if (!mounted) return;
-        sl<TtsService>().speak(
-          widget.character.pronunciation,
-          widget.languageId,
-        );
+        sl<LetterAudioService>().playLetter(widget.character);
       });
 
       _progressBloc.add(ProgressRecord(
@@ -540,4 +538,3 @@ class _ControlButton extends StatelessWidget {
     );
   }
 }
-
