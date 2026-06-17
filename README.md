@@ -77,12 +77,6 @@ lib/
 - Responsive layouts for phones and tablets/iPads
 - Clean Architecture + MVVM + BLoC throughout (GetIt DI)
 
-## Running tests
-
-```bash
-flutter test
-```
-
 ## Build notes
 
 **Android** — if you see `launch_background not found`, ensure these files exist:
