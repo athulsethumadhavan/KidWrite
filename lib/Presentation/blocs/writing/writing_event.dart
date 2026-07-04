@@ -15,20 +15,29 @@ class WritingLoadCharacter extends WritingEvent {
 
 class WritingStrokeStarted extends WritingEvent {
   final Offset point;
-  const WritingStrokeStarted(this.point);
+
+  /// Canvas side length — needed to map the touch point onto the glyph
+  /// mask so ink only registers inside the letter.
+  final double canvasSize;
+  const WritingStrokeStarted(this.point, this.canvasSize);
   @override
-  List<Object?> get props => [point];
+  List<Object?> get props => [point, canvasSize];
 }
 
 class WritingStrokeUpdated extends WritingEvent {
   final Offset point;
-  const WritingStrokeUpdated(this.point);
+  final double canvasSize;
+  const WritingStrokeUpdated(this.point, this.canvasSize);
   @override
-  List<Object?> get props => [point];
+  List<Object?> get props => [point, canvasSize];
 }
 
 class WritingStrokeEnded extends WritingEvent {
-  const WritingStrokeEnded();
+  /// Needed to validate guided strokes against the demonstrated line.
+  final Size canvasSize;
+  const WritingStrokeEnded(this.canvasSize);
+  @override
+  List<Object?> get props => [canvasSize];
 }
 
 class WritingCheckAccuracy extends WritingEvent {

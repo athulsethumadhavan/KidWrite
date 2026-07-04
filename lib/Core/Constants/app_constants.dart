@@ -17,7 +17,9 @@ class AppConstants {
   static const Duration pageTransitionDuration = Duration(milliseconds: 400);
 
   // Canvas
-  static const double strokeWidth = 10.0;
+  static const double strokeWidth = 18.0;
+  // Child's ink width as a fraction of the letter's own path thickness.
+  static const double inkWidthFactor = 0.6;
   static const double guideStrokeWidth = 3.0;
   static const double canvasPadding = 24.0;
   // Accuracy threshold (0.0–1.0): fraction of guide points hit

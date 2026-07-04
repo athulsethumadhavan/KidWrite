@@ -378,6 +378,24 @@ class _StatusBadge extends StatelessWidget {
         ],
       );
     }
+    // Guided mode (English & numbers): stroke-by-stroke messages.
+    if (state.isGuided) {
+      if (state.strokeMissed) {
+        return Text(
+          'Oops! Watch the hand and try again 💪',
+          style: TextStyle(
+              color: AppColors.orange,
+              fontWeight: FontWeight.w700,
+              fontSize: 15),
+        );
+      }
+      return Text(
+        'Stroke ${state.targetStrokeIndex + 1} of '
+            '${state.guideStrokes.length} — follow the hand! 👆',
+        style: TextStyle(
+            color: langColor, fontWeight: FontWeight.w600, fontSize: 15),
+      );
+    }
     if (state.status == WritingStatus.drawing ||
         (state.strokes.isNotEmpty &&
             state.status == WritingStatus.idle)) {
@@ -410,13 +428,30 @@ class _CanvasSection extends StatelessWidget {
         currentStroke: state.currentStroke,
         isSuccess: state.status == WritingStatus.success,
         accentColor: langColor,
+        // Fraction of the letter's own path thickness (fallback while
+        // measuring) — tune via AppConstants.inkWidthFactor.
+        strokeWidth: state.glyphStrokeWidth > 0
+            ? (state.glyphStrokeWidth * size * AppConstants.inkWidthFactor)
+            .clamp(12.0, size * 0.14)
+            .toDouble()
+            : AppConstants.strokeWidth,
+        guideStrokes: state.guideStrokes,
+        targetStrokeIndex: state.targetStrokeIndex,
+        // Hand demo shows while waiting for the child to draw; hides while
+        // drawing and after success.
+        showHand: state.isGuided &&
+            state.status != WritingStatus.drawing &&
+            state.status != WritingStatus.success,
         onStrokeStart: (p) =>
-            context.read<WritingBloc>().add(WritingStrokeStarted(p)),
+            context.read<WritingBloc>().add(WritingStrokeStarted(p, size)),
         onStrokeUpdate: (p) =>
-            context.read<WritingBloc>().add(WritingStrokeUpdated(p)),
+            context.read<WritingBloc>().add(WritingStrokeUpdated(p, size)),
         onStrokeEnd: () {
-          // Only record the stroke — accuracy is checked when the kid taps "Done ✓"
-          context.read<WritingBloc>().add(const WritingStrokeEnded());
+          // Guided mode validates the stroke immediately; free mode just
+          // records it until the kid taps "Done ✓".
+          context
+              .read<WritingBloc>()
+              .add(WritingStrokeEnded(Size(size, size)));
         },
       ),
     );
@@ -451,8 +486,9 @@ class _BottomControls extends StatelessWidget {
                 },
               ),
 
-              // Done ✓ — shown while tracing or after failure; disabled while checking
-              if (hasStrokes && !isSuccess)
+              // Done ✓ — free mode only (guided mode advances automatically
+              // after each stroke); disabled while checking
+              if (hasStrokes && !isSuccess && !state.isGuided)
                 _ControlButton(
                   icon: state.status == WritingStatus.checking
                       ? Icons.hourglass_top_rounded
