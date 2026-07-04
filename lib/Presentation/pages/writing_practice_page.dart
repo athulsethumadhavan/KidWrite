@@ -7,7 +7,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kid_write/Core/Constants/app_constants.dart';
 import 'package:kid_write/Core/services/letter_audio_service.dart';
-import 'package:kid_write/Core/services/tts_service.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/responsive_helper.dart';
