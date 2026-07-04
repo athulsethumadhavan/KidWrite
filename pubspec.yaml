@@ -57,6 +57,10 @@ dependencies:
   google_fonts: ^6.2.1
   flutter_svg: ^2.0.10+1
 
+  # Settings menu (rating / support / links)
+  url_launcher: ^6.3.0
+  in_app_review: ^2.0.9
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

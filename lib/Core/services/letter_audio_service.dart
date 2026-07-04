@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
 import '../../domain/entities/character.dart';
-import '../constants/app_constants.dart';
 
 /// Plays the pre-recorded pronunciation for a character.
 ///
