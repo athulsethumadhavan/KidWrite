@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -37,6 +39,15 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
   late final WritingBloc _writingBloc;
   late final ProgressBloc _progressBloc;
 
+  // Star-reward animation state.
+  final GlobalKey _stackKey = GlobalKey();
+  final List<GlobalKey> _starKeys = [GlobalKey(), GlobalKey(), GlobalKey()];
+  bool _showFlyStar = false;
+  int? _flyTargetIndex;
+  Offset _flyFrom = Offset.zero;
+  Offset _flyTo = Offset.zero;
+  Timer? _redrawTimer;
+
   @override
   void initState() {
     super.initState();
@@ -46,14 +57,40 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
       ..add(WritingLoadCharacter(widget.character));
     _progressBloc = sl<ProgressBloc>()
       ..add(ProgressLoad(widget.languageId));
+
+    // Say the letter aloud when the page opens.
+    Timer(const Duration(milliseconds: 600), () {
+      if (mounted) sl<LetterAudioService>().playLetter(widget.character);
+    });
   }
 
   @override
   void dispose() {
+    _redrawTimer?.cancel();
     _confetti.dispose();
     _writingBloc.close();
     _progressBloc.close();
     super.dispose();
+  }
+
+  /// Big star pops at the canvas, then flies up into star slot [index].
+  void _launchStarFly(int index) {
+    final stackBox =
+    _stackKey.currentContext?.findRenderObject() as RenderBox?;
+    if (stackBox == null) return;
+    final size = stackBox.size;
+    final slotBox =
+    _starKeys[index].currentContext?.findRenderObject() as RenderBox?;
+    final to = slotBox != null
+        ? stackBox.globalToLocal(
+        slotBox.localToGlobal(slotBox.size.center(Offset.zero)))
+        : Offset(size.width / 2, 60);
+    setState(() {
+      _flyFrom = Offset(size.width / 2, size.height * 0.55);
+      _flyTo = to;
+      _flyTargetIndex = index;
+      _showFlyStar = true;
+    });
   }
 
   Color get _langColor =>
@@ -75,18 +112,35 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
             primaryColor: _langColor,
             child: SafeArea(
               child: Stack(
+                key: _stackKey,
                 children: [
                   isTablet
                       ? _TabletLayout(
                     character: widget.character,
                     languageId: widget.languageId,
                     langColor: _langColor,
+                    starKeys: _starKeys,
+                    hiddenStar: _showFlyStar ? _flyTargetIndex : null,
                   )
                       : _PhoneLayout(
                     character: widget.character,
                     languageId: widget.languageId,
                     langColor: _langColor,
+                    starKeys: _starKeys,
+                    hiddenStar: _showFlyStar ? _flyTargetIndex : null,
                   ),
+
+                  // Big star flying up into the star row.
+                  if (_showFlyStar)
+                    _FlyingStar(
+                      from: _flyFrom,
+                      to: _flyTo,
+                      onDone: () {
+                        if (mounted) {
+                          setState(() => _showFlyStar = false);
+                        }
+                      },
+                    ),
 
                   // Confetti
                   Align(
@@ -117,14 +171,11 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
 
   void _handleWritingStateChange(BuildContext context, WritingState state) {
     if (state.status == WritingStatus.success) {
-      _confetti.play();
-      sl<MusicBloc>().add(const MusicPlaySuccess());
-
-      // After the success jingle (~1.2 s), play the pre-recorded pronunciation
-      Future.delayed(const Duration(milliseconds: 1200), () {
-        if (!mounted) return;
-        sl<LetterAudioService>().playLetter(widget.character);
-      });
+      // Stars earned so far (before this success).
+      final ps = _progressBloc.state;
+      final prior = ps is ProgressLoaded
+          ? (ps.progressMap[widget.character.id]?.successCount ?? 0)
+          : 0;
 
       _progressBloc.add(ProgressRecord(
         characterId: widget.character.id,
@@ -132,6 +183,25 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
         success: true,
         accuracy: state.accuracy,
       ));
+
+      _launchStarFly(prior.clamp(0, 2).toInt());
+
+      if (prior + 1 >= 3) {
+        // Third star (or replay of a completed letter): full celebration.
+        _confetti.play();
+        sl<MusicBloc>().add(const MusicPlaySuccess());
+        Future.delayed(const Duration(milliseconds: 1200), () {
+          if (!mounted) return;
+          sl<LetterAudioService>().playLetter(widget.character);
+        });
+      } else {
+        // Star 1 or 2: pop sound, then reset the canvas for another go.
+        sl<MusicBloc>().add(const MusicPlayTap());
+        _redrawTimer?.cancel();
+        _redrawTimer = Timer(const Duration(milliseconds: 1700), () {
+          if (mounted) _writingBloc.add(const WritingClear());
+        });
+      }
     } else if (state.status == WritingStatus.failure) {
       _progressBloc.add(ProgressRecord(
         characterId: widget.character.id,
@@ -151,11 +221,15 @@ class _PhoneLayout extends StatelessWidget {
   final Character character;
   final String languageId;
   final Color langColor;
+  final List<GlobalKey> starKeys;
+  final int? hiddenStar;
 
   const _PhoneLayout({
     required this.character,
     required this.languageId,
     required this.langColor,
+    required this.starKeys,
+    required this.hiddenStar,
   });
 
   @override
@@ -164,7 +238,11 @@ class _PhoneLayout extends StatelessWidget {
       children: [
         _TopBar(character: character, languageId: languageId),
         const SizedBox(height: 8),
-        _CharacterInfo(character: character, langColor: langColor),
+        _CharacterInfo(
+            character: character,
+            langColor: langColor,
+            starKeys: starKeys,
+            hiddenStar: hiddenStar),
         const SizedBox(height: 16),
         Expanded(
           child: Center(
@@ -172,7 +250,7 @@ class _PhoneLayout extends StatelessWidget {
                 character: character, langColor: langColor),
           ),
         ),
-        _BottomControls(langColor: langColor),
+        _BottomControls(langColor: langColor, character: character),
         const SizedBox(height: 16),
       ],
     );
@@ -187,11 +265,15 @@ class _TabletLayout extends StatelessWidget {
   final Character character;
   final String languageId;
   final Color langColor;
+  final List<GlobalKey> starKeys;
+  final int? hiddenStar;
 
   const _TabletLayout({
     required this.character,
     required this.languageId,
     required this.langColor,
+    required this.starKeys,
+    required this.hiddenStar,
   });
 
   @override
@@ -212,9 +294,12 @@ class _TabletLayout extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       _CharacterInfo(
-                          character: character, langColor: langColor),
+                          character: character,
+                          langColor: langColor,
+                          starKeys: starKeys,
+                          hiddenStar: hiddenStar),
                       const SizedBox(height: 32),
-                      _BottomControls(langColor: langColor),
+                      _BottomControls(langColor: langColor, character: character),
                     ],
                   ),
                 ),
@@ -277,7 +362,14 @@ class _TopBar extends StatelessWidget {
 class _CharacterInfo extends StatelessWidget {
   final Character character;
   final Color langColor;
-  const _CharacterInfo({required this.character, required this.langColor});
+  final List<GlobalKey> starKeys;
+  final int? hiddenStar; // slot kept unfilled while its star is flying in
+  const _CharacterInfo({
+    required this.character,
+    required this.langColor,
+    required this.starKeys,
+    required this.hiddenStar,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -285,28 +377,79 @@ class _CharacterInfo extends StatelessWidget {
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           decoration: BoxDecoration(
             color: langColor.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Column(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                character.name,
-                style: theme.textTheme.titleLarge,
+              Column(
+                children: [
+                  Text(
+                    character.name,
+                    style: theme.textTheme.titleLarge,
+                  ),
+                  Text(
+                    '"${character.pronunciation}"',
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: langColor,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
               ),
-              Text(
-                '"${character.pronunciation}"',
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: langColor,
-                  fontStyle: FontStyle.italic,
+              const SizedBox(width: 12),
+              // Speaker — says the letter sound aloud.
+              GestureDetector(
+                onTap: () =>
+                    sl<LetterAudioService>().playLetter(character),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: langColor.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.volume_up_rounded,
+                    color: langColor,
+                    size: 26,
+                  ),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
+        // Earned stars for this letter (fills as the kid succeeds).
+        BlocBuilder<ProgressBloc, ProgressState>(
+          builder: (_, ps) {
+            final stars = ps is ProgressLoaded
+                ? (ps.progressMap[character.id]?.successCount ?? 0)
+                .clamp(0, 3)
+                : 0;
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (int i = 0; i < 3; i++)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: Icon(
+                      Icons.star_rounded,
+                      key: starKeys[i],
+                      size: i == 1 ? 34 : 28,
+                      color: i < stars && i != hiddenStar
+                          ? const Color(0xFFFFB300)
+                          : Colors.black.withValues(alpha: 0.22),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: 8),
         BlocBuilder<WritingBloc, WritingState>(
           builder: (_, state) => _StatusBadge(state: state, langColor: langColor),
         ),
@@ -420,6 +563,15 @@ class _CanvasSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = ResponsiveHelper.canvasSize(context);
+    // Third-star attempt (2 stars earned): hand and dots are OFF — the
+    // child traces the letter from memory. The letter body stays visible
+    // and every stroke is still validated.
+    final ps = context.watch<ProgressBloc>().state;
+    final stars = ps is ProgressLoaded
+        ? (ps.progressMap[character.id]?.successCount ?? 0)
+        : 0;
+    final showGuides = stars < 2;
+
     return BlocBuilder<WritingBloc, WritingState>(
       builder: (context, state) => DrawingCanvas(
         character: character,
@@ -437,9 +589,11 @@ class _CanvasSection extends StatelessWidget {
             : AppConstants.strokeWidth,
         guideStrokes: state.guideStrokes,
         targetStrokeIndex: state.targetStrokeIndex,
+        showGuideDots: showGuides,
         // Hand demo shows while waiting for the child to draw; hides while
         // drawing and after success.
-        showHand: state.isGuided &&
+        showHand: showGuides &&
+            state.isGuided &&
             state.status != WritingStatus.drawing &&
             state.status != WritingStatus.success,
         onStrokeStart: (p) =>
@@ -460,7 +614,8 @@ class _CanvasSection extends StatelessWidget {
 
 class _BottomControls extends StatelessWidget {
   final Color langColor;
-  const _BottomControls({required this.langColor});
+  final Character character;
+  const _BottomControls({required this.langColor, required this.character});
 
   @override
   Widget build(BuildContext context) {
@@ -507,13 +662,23 @@ class _BottomControls extends StatelessWidget {
                   },
                 ),
 
-              // Next → shown only on success
+              // Next → back to the map, but only once all 3 stars are in
+              // (stars 1–2 auto-reset the canvas for another go).
               if (isSuccess)
-                _ControlButton(
-                  icon: Icons.arrow_forward_rounded,
-                  label: 'Next',
-                  color: AppColors.successColor,
-                  onTap: () => context.pop(),
+                BlocBuilder<ProgressBloc, ProgressState>(
+                  builder: (context, ps) {
+                    final stars = ps is ProgressLoaded
+                        ? (ps.progressMap[character.id]?.successCount ??
+                        0)
+                        : 0;
+                    if (stars < 3) return const SizedBox.shrink();
+                    return _ControlButton(
+                      icon: Icons.arrow_forward_rounded,
+                      label: 'Next',
+                      color: AppColors.successColor,
+                      onTap: () => context.pop(),
+                    );
+                  },
                 ),
 
               // Try Again — shown after failure, no strokes required message
@@ -569,6 +734,63 @@ class _ControlButton extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Big golden star: pops in at the canvas, then flies up into the star row.
+class _FlyingStar extends StatelessWidget {
+  final Offset from;
+  final Offset to;
+  final VoidCallback onDone;
+
+  const _FlyingStar({
+    required this.from,
+    required this.to,
+    required this.onDone,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const double starSize = 110;
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: 1),
+          duration: const Duration(milliseconds: 1300),
+          onEnd: onDone,
+          builder: (context, t, _) {
+            // Phase 1 (0–0.35): star pops in at the canvas.
+            // Phase 2 (0.35–1): star flies to the row while shrinking.
+            final popT = (t / 0.35).clamp(0.0, 1.0);
+            final moveT = Curves.easeInOutCubic
+                .transform(((t - 0.35) / 0.65).clamp(0.0, 1.0));
+            final pos = Offset.lerp(from, to, moveT)!;
+            final scale = t < 0.35
+                ? Curves.elasticOut.transform(popT)
+                : 1.0 - 0.72 * moveT;
+            return Stack(
+              children: [
+                Positioned(
+                  left: pos.dx - starSize / 2,
+                  top: pos.dy - starSize / 2,
+                  child: Transform.scale(
+                    scale: scale,
+                    child: const Icon(
+                      Icons.star_rounded,
+                      size: starSize,
+                      color: Color(0xFFFFB300),
+                      shadows: [
+                        Shadow(color: Colors.black38, blurRadius: 16),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

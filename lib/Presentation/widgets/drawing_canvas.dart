@@ -28,6 +28,10 @@ class DrawingCanvas extends StatelessWidget {
   /// Show the animated pointing-hand demo for the current stroke.
   final bool showHand;
 
+  /// Show the dotted guide line for the current stroke (off in the
+  /// third-star "from memory" attempt).
+  final bool showGuideDots;
+
   const DrawingCanvas({
     super.key,
     required this.character,
@@ -43,6 +47,7 @@ class DrawingCanvas extends StatelessWidget {
     this.guideStrokes = const [],
     this.targetStrokeIndex = 0,
     this.showHand = false,
+    this.showGuideDots = true,
   });
 
   bool get _hasTarget =>
@@ -93,6 +98,7 @@ class DrawingCanvas extends StatelessWidget {
                   strokeWidth: strokeWidth,
                   guideStrokes: guideStrokes,
                   targetStrokeIndex: targetStrokeIndex,
+                  showGuideDots: showGuideDots,
                 ),
               ),
               if (showHand && _hasTarget)
@@ -117,6 +123,7 @@ class _CanvasPainter extends CustomPainter {
   final double strokeWidth;
   final List<List<Offset>> guideStrokes;
   final int targetStrokeIndex;
+  final bool showGuideDots;
 
   _CanvasPainter({
     required this.character,
@@ -127,6 +134,7 @@ class _CanvasPainter extends CustomPainter {
     required this.strokeWidth,
     required this.guideStrokes,
     required this.targetStrokeIndex,
+    required this.showGuideDots,
   });
 
   @override
@@ -192,7 +200,8 @@ class _CanvasPainter extends CustomPainter {
   /// Shows the stroke the child should draw now as a dotted guide line
   /// along the path (classic tracing-book style).
   void _drawTargetHint(Canvas canvas, Size size) {
-    if (guideStrokes.isEmpty ||
+    if (!showGuideDots ||
+        guideStrokes.isEmpty ||
         targetStrokeIndex >= guideStrokes.length ||
         isSuccess) {
       return;
@@ -342,5 +351,6 @@ class _CanvasPainter extends CustomPainter {
           old.isSuccess != isSuccess ||
           old.strokeWidth != strokeWidth ||
           old.guideStrokes != guideStrokes ||
-          old.targetStrokeIndex != targetStrokeIndex;
+          old.targetStrokeIndex != targetStrokeIndex ||
+          old.showGuideDots != showGuideDots;
 }

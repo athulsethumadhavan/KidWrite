@@ -73,7 +73,7 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
   /// Ink-confinement mask stamped directly from the guide strokes.
   void _buildMaskFromStrokes(List<List<Offset>> strokes) {
     final mask = List<bool>.filled(_res * _res, false);
-    final r = ((_craftedBodyWidth / 2 + 0.03) * _res).round();
+    final r = ((_craftedBodyWidth / 2 + 0.02) * _res).round();
     for (final s in strokes) {
       for (final pt in s) {
         final cx = (pt.dx * _res).round(), cy = (pt.dy * _res).round();
@@ -177,7 +177,7 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
           .toList();
 
       final match = _guidedMatch(state.currentStroke, target, size);
-      if (match >= 0.55) {
+      if (match >= 0.75) {
         final allStrokes = List<List<Offset>>.from(state.strokes)
           ..add(List.from(state.currentStroke));
         final nextIndex = state.targetStrokeIndex + 1;
@@ -215,7 +215,10 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
   /// AND the target line must be covered end-to-end.
   double _guidedMatch(List<Offset> drawn, List<Offset> target, double size) {
     if (drawn.isEmpty || target.isEmpty) return 0;
-    final tol = size * 0.09;
+    // Matches the letter body's edge (body half-width is 5% of canvas):
+    // forgiving for small fingers, but real wandering fails.
+    // Tuned by simulation: ±20px wobble always passes, ±28px always fails.
+    final tol = size * 0.05;
 
     // Densify (fast swipes leave sparse points; a single tap stays a
     // single point — enough to cover a dot like the one on i / j).
@@ -248,7 +251,9 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
     }
     final precision = drawnNear / dense.length;
     final recall = targetCovered / target.length;
-    if (precision < 0.5 || recall < 0.5) return math.min(precision, recall);
+    if (precision < 0.7 || recall < 0.7) {
+      return math.min(precision, recall);
+    }
     return (precision + recall) / 2;
   }
 
