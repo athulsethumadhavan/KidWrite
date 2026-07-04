@@ -41,7 +41,7 @@ upper = [
 ]
 print('\n— English uppercase —')
 for sym, pron in upper:
-    speak(f'en_upper_{sym}', f'{sym}. {pron}', 'en')
+    speak(f'en_upper_{sym}', pron, 'en')  # single sound, e.g. "ay" 
 
 # ── English lowercase a-z ─────────────────────────────────────────────────
 lower = [
@@ -53,7 +53,7 @@ lower = [
 ]
 print('\n— English lowercase —')
 for sym, pron in lower:
-    speak(f'en_lower_{sym}', f'{sym}. {pron}', 'en')
+    speak(f'en_lower_{sym}', pron, 'en')  # single sound, e.g. "ay" 
 
 # ── Numbers 0-9 ───────────────────────────────────────────────────────────
 numbers = ['zero','one','two','three','four','five','six','seven','eight','nine']

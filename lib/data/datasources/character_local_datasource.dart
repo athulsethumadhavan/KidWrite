@@ -77,7 +77,7 @@ class CharacterLocalDataSourceImpl implements CharacterLocalDataSource {
   // ---------------------------------------------------------------------------
   List<CharacterModel> _englishCharacters() {
     final uppercaseData = [
-      ['A', 'Letter A', 'ay'],  ['B', 'Letter B', 'bee'],
+      ['A', 'Letter A', 'ey'],  ['B', 'Letter B', 'bee'],
       ['C', 'Letter C', 'see'], ['D', 'Letter D', 'dee'],
       ['E', 'Letter E', 'ee'],  ['F', 'Letter F', 'ef'],
       ['G', 'Letter G', 'jee'], ['H', 'Letter H', 'aych'],
@@ -92,7 +92,7 @@ class CharacterLocalDataSourceImpl implements CharacterLocalDataSource {
       ['Y', 'Letter Y', 'why'], ['Z', 'Letter Z', 'zee'],
     ];
     final lowercaseData = [
-      ['a', 'Small a', 'ay'],  ['b', 'Small b', 'bee'],
+      ['a', 'Small a', 'ey'],  ['b', 'Small b', 'bee'],
       ['c', 'Small c', 'see'], ['d', 'Small d', 'dee'],
       ['e', 'Small e', 'ee'],  ['f', 'Small f', 'ef'],
       ['g', 'Small g', 'jee'], ['h', 'Small h', 'aych'],
@@ -110,7 +110,7 @@ class CharacterLocalDataSourceImpl implements CharacterLocalDataSource {
     final List<CharacterModel> result = [];
     for (int i = 0; i < uppercaseData.length; i++) {
       result.add(CharacterModel(
-        id: 'en_upper_${uppercaseData[i][0]}',
+        id: 'en_lower_${uppercaseData[i][0]}',
         symbol: uppercaseData[i][0],
         name: uppercaseData[i][1],
         pronunciation: uppercaseData[i][2],

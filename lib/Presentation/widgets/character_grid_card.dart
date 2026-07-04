@@ -25,6 +25,9 @@ class CharacterGridCard extends StatelessWidget {
       'malayalam': 'NotoSansMalayalam',
       'hindi': 'NotoSansDevanagari',
       'tamil': 'NotoSansTamil',
+      // School-style print letterforms for beginners (single-story a, g).
+      'english': 'Andika',
+      'numbers': 'Andika',
     };
     return map[languageId];
   }

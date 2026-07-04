@@ -39,5 +39,12 @@ class Progress extends Equatable {
   }
 
   @override
-  List<Object?> get props => [characterId, languageId];
+  List<Object?> get props => [
+    characterId,
+    languageId,
+    attemptCount,
+    successCount,
+    lastPracticed,
+    bestAccuracy,
+  ];
 }

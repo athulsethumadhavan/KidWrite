@@ -62,7 +62,14 @@ class LetterAudioService {
     }
     await _tts.setLanguage(_localeFor(character.languageId));
     await _tts.stop();
-    await _tts.speak('${character.name}. ${character.pronunciation}');
+    // English/numbers: speak the pronunciation word ("ay", "bee", "five") —
+    // speaking the raw symbol makes some TTS engines announce the case
+    // ("capital A"). Other scripts: speak the symbol in its locale.
+    final text = (character.languageId == 'english' ||
+        character.languageId == 'numbers')
+        ? character.pronunciation
+        : character.symbol;
+    await _tts.speak(text);
   }
 
   static String _localeFor(String languageId) {

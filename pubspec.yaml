@@ -72,6 +72,15 @@ flutter:
     - assets/animations/
     - assets/audio/letters/
 
+  fonts:
+    # Andika (SIL) — literacy font with school-style print letterforms
+    # (single-story a and g), used for English letters and numbers.
+    - family: Andika
+      fonts:
+        - asset: assets/fonts/Andika-Regular.ttf
+        - asset: assets/fonts/Andika-Bold.ttf
+          weight: 700
+
 #  fonts:
 #    - family: NotoSansMalayalam
 #      fonts:
