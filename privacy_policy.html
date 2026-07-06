@@ -74,6 +74,7 @@
 <header>
     <h1>✏️ KidWrite</h1>
     <p>Privacy Policy</p>
+    <p style="font-size:0.85rem; opacity:0.8;">Last updated: 3 July 2026</p>
 </header>
 
 <div class="container">
@@ -91,7 +92,8 @@
     <div class="card">
         <div class="highlight">
             🔒 <strong>KidWrite does not collect, transmit, or share any personal information.</strong>
-            The app works completely offline after installation.
+            All features work fully offline. The only network request the app
+            makes is an anonymous app-version check (see Section&nbsp;3).
         </div>
         <p>Specifically, KidWrite does <strong>not</strong> collect:</p>
         <ul>
@@ -127,9 +129,23 @@
     <div class="card">
         <p>
             KidWrite does <strong>not require an internet connection</strong> to function.
-            The app does not make any network requests. All letters, audio, and animations
-            are bundled with the app at install time.
+            All letters, audio, and animations are bundled with the app at install time.
         </p>
+        <p>
+            The app makes exactly <strong>one type of network request</strong>: on launch it
+            may download a small static file (<code>version.json</code>) from our website
+            (hosted on GitHub Pages) to check whether a newer version of the app is
+            available, so we can let you know about important updates.
+        </p>
+        <ul>
+            <li>This request contains <strong>no personal data</strong>, no identifiers,
+                and nothing about your child or their progress.</li>
+            <li>Like any web request, the hosting provider (GitHub) may process your
+                IP address in standard server logs to deliver the file; we do not
+                receive or store this information.</li>
+            <li>If you are offline, the check is silently skipped and the app works
+                normally.</li>
+        </ul>
     </div>
 
     <h2>4. Third-Party Services</h2>
@@ -145,7 +161,9 @@
         <p>
             The only third-party libraries used are open-source Flutter packages for
             UI rendering, audio playback, and local storage — none of which transmit
-            data externally.
+            data externally. The app-version check file is hosted on GitHub Pages
+            (see Section&nbsp;3). App rating uses your device's built-in store review
+            prompt, provided by Apple/Google.
         </p>
     </div>
 
@@ -159,17 +177,21 @@
             <li>We do not knowingly collect any personal information from children</li>
             <li>We do not display advertisements</li>
             <li>We do not allow in-app purchases</li>
-            <li>We do not link to external websites or social networks</li>
+            <li>The app contains no social networks and no links aimed at children;
+                the parent settings menu contains only links to this privacy policy,
+                the app store page, and our support email</li>
             <li>No parental consent is required because no data is collected</li>
         </ul>
     </div>
 
     <h2>6. Permissions</h2>
     <div class="card">
-        <p>KidWrite requests only the permissions needed to play audio:</p>
+        <p>KidWrite requests only:</p>
         <ul>
             <li><strong>Audio playback</strong> — to play background music, sound effects,
                 and letter pronunciation audio. No recording permission is requested.</li>
+            <li><strong>Internet</strong> — used solely for the anonymous app-version
+                check described in Section&nbsp;3.</li>
         </ul>
         <p>No other device permissions (camera, contacts, location, microphone, storage) are requested.</p>
     </div>
@@ -178,9 +200,9 @@
     <div class="card">
         <p>
             Since KidWrite stores only non-personal preference data locally on your device
-            and makes no network connections, the risk of data breach or unauthorised access
-            is minimal. Your device's own security (PIN, biometrics) protects the locally
-            stored progress data.
+            and transmits no personal data, the risk of data breach or unauthorised access
+            is minimal. The version check is served over encrypted HTTPS. Your device's
+            own security (PIN, biometrics) protects the locally stored progress data.
         </p>
     </div>
 
@@ -201,7 +223,7 @@
         </p>
         <p>
             <strong>ATS Digital Services</strong><br>
-            📧 <a href="mailto:atsdigiservice+kidwrite@gmail.com">atsdigiserviceSupport@gmail.com</a>
+            📧 <a href="mailto:athulsethumadhavan+kidwrite@gmail.com">athulsethumadhavan+kidwrite@gmail.com</a>
         </p>
         <p>We aim to respond to all enquiries within 5 business days.</p>
     </div>
