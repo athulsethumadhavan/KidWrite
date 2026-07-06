@@ -47,7 +47,7 @@ class _HomePageState extends State<HomePage> {
 class _HomeView extends StatelessWidget {
   const _HomeView();
 
-  static const _supportEmail = 'athulsethumadhavan+kidwrite@gmail.com';
+  static const _supportEmail = 'atsdigiservice@gmail.com+kidwrite@gmail.com';
   static const _privacyPolicyUrl =
       'https://athulsethumadhavan.github.io/KidWrite/privacy_policy.html';
   static const _appStoreId = '6781143198';
