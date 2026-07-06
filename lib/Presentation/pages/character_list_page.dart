@@ -217,8 +217,10 @@ class _LevelPathMap extends StatelessWidget {
   static const double _topPad = 52; // room for the star row of node 1
   static const double _bottomPad = 40;
 
-  /// Serpentine x-position (fraction of width) for node [i].
-  double _xFrac(int i) => 0.5 + 0.34 * math.sin(i * math.pi / 2);
+  /// Serpentine x-position (fraction of width) at wave position [t]
+  /// (t = node index, but continuous values sample the same sine wave —
+  /// used to draw the trail as one flowing curve).
+  double _xFrac(num t) => 0.5 + 0.34 * math.sin(t * math.pi / 2);
 
   @override
   Widget build(BuildContext context) {
@@ -231,13 +233,31 @@ class _LevelPathMap extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
+        // Keep the winding path compact on tablets: cap its width and
+        // centre it, instead of stretching bubbles across the screen.
+        final pathWidth = math.min(width, 480.0);
+        final xOffset = (width - pathWidth) / 2;
         final centers = <Offset>[
           for (int i = 0; i < characters.length; i++)
             Offset(
-              _xFrac(i) * width,
+              xOffset + _xFrac(i) * pathWidth,
               _topPad + _nodeSize / 2 + i * _spacingY,
             ),
         ];
+
+        // The trail is the CONTINUOUS sine wave the bubbles sit on —
+        // sampled densely, so it flows in perfect rounded curves with no
+        // zigzag corners at all.
+        final trail = <Offset>[];
+        final lastY = centers.last.dy;
+        for (double y = centers.first.dy; y <= lastY; y += 6) {
+          final t = (y - centers.first.dy) / _spacingY;
+          trail.add(Offset(
+            xOffset + _xFrac(0.0 + t) * pathWidth,
+            y,
+          ));
+        }
+        trail.add(centers.last);
 
         return SingleChildScrollView(
           child: SizedBox(
@@ -249,7 +269,7 @@ class _LevelPathMap extends StatelessWidget {
                 CustomPaint(
                   size: Size(width, mapHeight),
                   painter: _TrailPainter(
-                    centers: centers,
+                    trail: trail,
                     color: accentColor,
                   ),
                 ),
@@ -304,32 +324,18 @@ class _LevelPathMap extends StatelessWidget {
 
 /// Soft wide trail with white "footstep" dashes, like a board-game path.
 class _TrailPainter extends CustomPainter {
-  final List<Offset> centers;
+  final List<Offset> trail;
   final Color color;
 
-  _TrailPainter({required this.centers, required this.color});
-
-  Path _smoothPath() {
-    final path = Path()..moveTo(centers.first.dx, centers.first.dy);
-    for (int i = 1; i < centers.length; i++) {
-      if (i < centers.length - 1) {
-        final mid = Offset(
-          (centers[i].dx + centers[i + 1].dx) / 2,
-          (centers[i].dy + centers[i + 1].dy) / 2,
-        );
-        path.quadraticBezierTo(
-            centers[i].dx, centers[i].dy, mid.dx, mid.dy);
-      } else {
-        path.lineTo(centers[i].dx, centers[i].dy);
-      }
-    }
-    return path;
-  }
+  _TrailPainter({required this.trail, required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (centers.length < 2) return;
-    final path = _smoothPath();
+    if (trail.length < 2) return;
+    final path = Path()..moveTo(trail.first.dx, trail.first.dy);
+    for (int i = 1; i < trail.length; i++) {
+      path.lineTo(trail[i].dx, trail[i].dy);
+    }
 
     // Wide soft band.
     canvas.drawPath(
@@ -352,7 +358,8 @@ class _TrailPainter extends CustomPainter {
     for (final metric in metrics) {
       double d = 10;
       while (d < metric.length) {
-        final extract = metric.extractPath(d, math.min(d + 10, metric.length));
+        final extract =
+        metric.extractPath(d, math.min(d + 10, metric.length));
         canvas.drawPath(extract, dashPaint);
         d += 24;
       }
@@ -361,7 +368,7 @@ class _TrailPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_TrailPainter old) =>
-      old.centers != centers || old.color != color;
+      old.trail != trail || old.color != color;
 }
 
 class _LevelNode extends StatelessWidget {
@@ -459,20 +466,21 @@ class _LevelNode extends StatelessWidget {
               ),
               child: Stack(
                 children: [
-                  // Glossy bubble shine.
-                  Align(
-                    alignment: const Alignment(-0.45, -0.62),
-                    child: Container(
-                      width: size * 0.30,
-                      height: size * 0.17,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.4),
-                        borderRadius: BorderRadius.all(
-                          Radius.elliptical(size * 0.15, size * 0.085),
+                  // Glossy bubble shine (unlocked bubbles only).
+                  if (!isLocked)
+                    Align(
+                      alignment: const Alignment(-0.45, -0.62),
+                      child: Container(
+                        width: size * 0.30,
+                        height: size * 0.17,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.all(
+                            Radius.elliptical(size * 0.15, size * 0.085),
+                          ),
                         ),
                       ),
                     ),
-                  ),
                   Center(
                     child: Text(
                       character.symbol,
@@ -480,13 +488,13 @@ class _LevelNode extends StatelessWidget {
                         fontSize: size * 0.52,
                         fontWeight: FontWeight.w900,
                         color: Colors.white
-                            .withValues(alpha: isLocked ? 0.5 : 1.0),
+                            .withValues(alpha: isLocked ? 0.28 : 1.0),
                         fontFamily: _fontFamily(),
                         height: 1.0,
                       ),
                     ),
                   ),
-                  // Lock sits ON TOP of the (dimmed) letter.
+                  // Lock sits ON TOP of the (faint) letter.
                   if (isLocked)
                     Center(
                       child: Icon(
@@ -494,7 +502,7 @@ class _LevelNode extends StatelessWidget {
                         color: Colors.white,
                         size: size * 0.34,
                         shadows: const [
-                          Shadow(color: Colors.black45, blurRadius: 6),
+                          Shadow(color: Colors.black38, blurRadius: 5),
                         ],
                       ),
                     ),

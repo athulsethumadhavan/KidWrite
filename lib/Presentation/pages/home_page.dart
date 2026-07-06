@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:kid_write/Core/Constants/app_constants.dart';
+import 'package:kid_write/Core/services/update_checker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_colors.dart';
@@ -16,8 +17,23 @@ import '../blocs/music/music_bloc.dart';
 import '../widgets/language_card.dart';
 import '../widgets/music_toggle_button.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    // Force-update check (reads version.json from GitHub Pages).
+    // Runs once per app session; fails silently offline.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) UpdateChecker.check(context);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

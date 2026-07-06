@@ -61,6 +61,10 @@ dependencies:
   url_launcher: ^6.3.0
   in_app_review: ^2.0.9
 
+  # Force-update check (reads version.json from GitHub Pages)
+  http: ^1.2.0
+  package_info_plus: ^8.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
