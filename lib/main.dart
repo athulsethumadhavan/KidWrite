@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kid_write/Core/router/app_router.dart';
+import 'package:kid_write/Core/services/deep_link_handler.dart';
 import 'package:kid_write/Core/theme/app_theme.dart';
 
 import 'presentation/blocs/music/music_bloc.dart';
@@ -22,6 +25,8 @@ void main() async {
   );
 
   await initDependencies();
+
+  unawaited(DeepLinkHandler.init(appRouter));
 
   runApp(const MyApp());
 }
