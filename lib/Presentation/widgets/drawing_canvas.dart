@@ -338,7 +338,8 @@ class _CanvasPainter extends CustomPainter {
       'hindi': 'NotoSansDevanagari',
       'tamil': 'NotoSansTamil',
       // School-style print letterforms for beginners (single-story a, g).
-      'english': 'Andika',
+      'english_upper': 'Andika',
+      'english_lower': 'Andika',
       'numbers': 'Andika',
     };
     return map[character.languageId];

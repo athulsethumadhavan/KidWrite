@@ -8,9 +8,12 @@ abstract class WritingEvent extends Equatable {
 
 class WritingLoadCharacter extends WritingEvent {
   final Character character;
-  const WritingLoadCharacter(this.character);
+
+  /// 3rd-star challenge: no hand, no dots, strokes in any order.
+  final bool freeDraw;
+  const WritingLoadCharacter(this.character, {this.freeDraw = false});
   @override
-  List<Object?> get props => [character];
+  List<Object?> get props => [character, freeDraw];
 }
 
 class WritingStrokeStarted extends WritingEvent {
@@ -53,7 +56,10 @@ class WritingClear extends WritingEvent {
 
 class WritingNextCharacter extends WritingEvent {
   final Character character;
-  const WritingNextCharacter(this.character);
+
+  /// 3rd-star challenge: no hand, no dots, strokes in any order.
+  final bool freeDraw;
+  const WritingNextCharacter(this.character, {this.freeDraw = false});
   @override
-  List<Object?> get props => [character];
+  List<Object?> get props => [character, freeDraw];
 }

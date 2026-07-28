@@ -1,6 +1,5 @@
 import 'package:get_it/get_it.dart';
 import 'package:kid_write/Core/services/letter_audio_service.dart';
-import 'package:kid_write/Core/services/tts_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'data/datasources/character_local_datasource.dart';

@@ -28,6 +28,11 @@ class WritingState extends Equatable {
   /// True right after a drawn stroke didn't follow the demonstrated line.
   final bool strokeMissed;
 
+  /// Free-draw challenge (3rd star): no hand, no dots, and strokes may be
+  /// drawn in any order — we only check that the finished drawing covers
+  /// the whole letter.
+  final bool freeDraw;
+
   const WritingState({
     this.character,
     this.strokes = const [],
@@ -39,6 +44,7 @@ class WritingState extends Equatable {
     this.guideStrokes = const [],
     this.targetStrokeIndex = 0,
     this.strokeMissed = false,
+    this.freeDraw = false,
   });
 
   bool get isGuided => guideStrokes.isNotEmpty;
@@ -54,6 +60,7 @@ class WritingState extends Equatable {
     List<List<Offset>>? guideStrokes,
     int? targetStrokeIndex,
     bool? strokeMissed,
+    bool? freeDraw,
   }) =>
       WritingState(
         character: character ?? this.character,
@@ -66,6 +73,7 @@ class WritingState extends Equatable {
         guideStrokes: guideStrokes ?? this.guideStrokes,
         targetStrokeIndex: targetStrokeIndex ?? this.targetStrokeIndex,
         strokeMissed: strokeMissed ?? this.strokeMissed,
+        freeDraw: freeDraw ?? this.freeDraw,
       );
 
   @override
@@ -80,5 +88,6 @@ class WritingState extends Equatable {
     guideStrokes,
     targetStrokeIndex,
     strokeMissed,
+    freeDraw,
   ];
 }

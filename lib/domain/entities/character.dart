@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum CharacterCategory { vowel, consonant, number, uppercase, lowercase }
+enum CharacterCategory { vowel, consonant, number, uppercase, lowercase, shape, line }
 
 class Character extends Equatable {
   final String id;

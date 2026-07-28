@@ -7,11 +7,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kid_write/Core/Constants/app_constants.dart';
 import 'package:kid_write/Core/services/letter_audio_service.dart';
+import 'package:kid_write/Core/services/review_prompt_service.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/responsive_helper.dart';
 import '../../core/widgets/animated_background.dart';
 import '../../domain/entities/character.dart';
+import '../../domain/usecases/get_progress.dart';
 import '../../injection_container.dart';
 import '../blocs/music/music_bloc.dart';
 import '../blocs/progress/progress_bloc.dart';
@@ -52,10 +54,12 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
     super.initState();
     _confetti = ConfettiController(
         duration: AppConstants.celebrationDuration);
-    _writingBloc = sl<WritingBloc>()
-      ..add(WritingLoadCharacter(widget.character));
+    _writingBloc = sl<WritingBloc>();
     _progressBloc = sl<ProgressBloc>()
       ..add(ProgressLoad(widget.languageId));
+    // Two stars already earned → the 3rd is the free-draw challenge:
+    // no hand, no dots, and strokes may be drawn in any order.
+    _startCharacter();
 
     // Say the letter aloud when the page opens.
     Timer(const Duration(milliseconds: 600), () {
@@ -90,6 +94,29 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
       _flyTargetIndex = index;
       _showFlyStar = true;
     });
+  }
+
+  Future<void> _startCharacter() async {
+    final prog = await sl<GetProgress>()(
+      widget.character.id,
+      widget.languageId,
+    );
+    final freeDraw = (prog?.successCount ?? 0) >= 2;
+    if (!mounted) return;
+    _writingBloc.add(
+      WritingLoadCharacter(widget.character, freeDraw: freeDraw),
+    );
+  }
+
+  /// After a level is completed, ask the parent for a review (at most
+  /// once — the service tracks levels and whether they already answered).
+  Future<void> _maybeAskForReview() async {
+    final due = await ReviewPromptService.registerLevelCompleted();
+    if (!due || !mounted) return;
+    // Let the confetti and the letter sound finish first.
+    await Future.delayed(const Duration(milliseconds: 2600));
+    if (!mounted) return;
+    await ReviewPromptService.show(context);
   }
 
   Color get _langColor =>
@@ -186,19 +213,33 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
       _launchStarFly(prior.clamp(0, 2).toInt());
 
       if (prior + 1 >= 3) {
-        // Third star (or replay of a completed letter): full celebration.
+        // Third star: level complete — full celebration.
         _confetti.play();
         sl<MusicBloc>().add(const MusicPlaySuccess());
         Future.delayed(const Duration(milliseconds: 1200), () {
           if (!mounted) return;
           sl<LetterAudioService>().playLetter(widget.character);
         });
+
+        // Count the level and, every few levels, ask for a review —
+        // after the celebration so we never interrupt the fun.
+        if (prior + 1 == 3) _maybeAskForReview();
       } else {
-        // Star 1 or 2: pop sound, then reset the canvas for another go.
+        // Star 1 or 2: pop sound, then set up the next attempt.
         sl<MusicBloc>().add(const MusicPlayTap());
+        final starsNow = prior + 1;
         _redrawTimer?.cancel();
         _redrawTimer = Timer(const Duration(milliseconds: 1700), () {
-          if (mounted) _writingBloc.add(const WritingClear());
+          if (!mounted) return;
+          if (starsNow >= 2) {
+            // Two stars done → the 3rd attempt is free-draw: reload the
+            // character so the hand and dots switch off right away.
+            _writingBloc.add(
+              WritingLoadCharacter(widget.character, freeDraw: true),
+            );
+          } else {
+            _writingBloc.add(const WritingClear());
+          }
         });
       }
     } else if (state.status == WritingStatus.failure) {
@@ -522,6 +563,18 @@ class _StatusBadge extends StatelessWidget {
     }
     // Guided mode (English & numbers): stroke-by-stroke messages.
     if (state.isGuided) {
+      // Third star: no hand, no dots — the child writes it alone, in any
+      // stroke order. We only cheer them on.
+      if (state.freeDraw) {
+        return Text(
+          state.strokes.isEmpty
+              ? 'Your turn! Write it all by yourself ✍️'
+              : 'Keep going — fill in the whole letter! 💪',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+              color: langColor, fontWeight: FontWeight.w700, fontSize: 15),
+        );
+      }
       if (state.strokeMissed) {
         return Text(
           'Oops! Watch the hand and try again 💪',
@@ -565,12 +618,6 @@ class _CanvasSection extends StatelessWidget {
     // Third-star attempt (2 stars earned): hand and dots are OFF — the
     // child traces the letter from memory. The letter body stays visible
     // and every stroke is still validated.
-    final ps = context.watch<ProgressBloc>().state;
-    final stars = ps is ProgressLoaded
-        ? (ps.progressMap[character.id]?.successCount ?? 0)
-        : 0;
-    final showGuides = stars < 2;
-
     return BlocBuilder<WritingBloc, WritingState>(
       builder: (context, state) => DrawingCanvas(
         character: character,
@@ -588,10 +635,10 @@ class _CanvasSection extends StatelessWidget {
             : AppConstants.strokeWidth,
         guideStrokes: state.guideStrokes,
         targetStrokeIndex: state.targetStrokeIndex,
-        showGuideDots: showGuides,
+        showGuideDots: !state.freeDraw,
         // Hand demo shows while waiting for the child to draw; hides while
         // drawing and after success.
-        showHand: showGuides &&
+        showHand: !state.freeDraw &&
             state.isGuided &&
             state.status != WritingStatus.drawing &&
             state.status != WritingStatus.success,

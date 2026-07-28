@@ -26,7 +26,11 @@ class AppColors {
 
   // Language theme colours
   static const Map<String, Color> languageColors = {
+    'lines': Color(0xFF5B7BD5),
+    'shapes': Color(0xFF16A085),
     'english': Color(0xFF3498DB),
+    'english_upper': Color(0xFF3498DB),
+    'english_lower': Color(0xFF2980B9),
     'malayalam': Color(0xFF8E44AD),
     'hindi': Color(0xFFE67E22),
     'tamil': Color(0xFF27AE60),

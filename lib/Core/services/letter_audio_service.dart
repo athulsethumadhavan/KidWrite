@@ -64,8 +64,14 @@ class LetterAudioService {
     // English/numbers: speak the pronunciation word ("ay", "bee", "five") —
     // speaking the raw symbol makes some TTS engines announce the case
     // ("capital A"). Other scripts: speak the symbol in its locale.
-    final text = (character.languageId == 'english' ||
-        character.languageId == 'numbers')
+    const spellOutName = {
+      'english_upper',
+      'english_lower',
+      'numbers',
+      'shapes',
+      'lines',
+    };
+    final text = spellOutName.contains(character.languageId)
         ? character.pronunciation
         : character.symbol;
     await _tts.speak(text);

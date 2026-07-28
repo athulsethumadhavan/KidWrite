@@ -24,7 +24,7 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
 
   Future<void> _onLoad(
       WritingLoadCharacter event, Emitter<WritingState> emit) async {
-    emit(WritingState(character: event.character));
+    emit(WritingState(character: event.character, freeDraw: event.freeDraw));
     final guide = _guideStrokesFor(event.character);
     if (guide.isNotEmpty) {
       _buildMaskFromStrokes(guide);
@@ -46,10 +46,14 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
   /// and the ink mask are ALL built from this same geometry, so nothing can
   /// ever mismatch. (The bundled font is only used for Indic free-tracing.)
   List<List<Offset>> _guideStrokesFor(Character character) {
-    if (character.languageId != 'english' &&
-        character.languageId != 'numbers') {
-      return const [];
-    }
+    const guided = {
+      'english_upper',
+      'english_lower',
+      'numbers',
+      'shapes',
+      'lines',
+    };
+    if (!guided.contains(character.languageId)) return const [];
     final crafted = LetterStrokes.of(character.symbol);
     if (crafted == null) return const [];
     // Scale the letter down around the canvas centre.
@@ -165,6 +169,51 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
   void _onStrokeEnded(
       WritingStrokeEnded event, Emitter<WritingState> emit) {
     if (state.currentStroke.isEmpty) return;
+
+    // ── Free-draw challenge: order doesn't matter. Keep every stroke and
+    // succeed as soon as the drawing covers the whole letter. ──
+    if (state.isGuided && state.freeDraw &&
+        state.status != WritingStatus.success) {
+      final size = event.canvasSize.width;
+      final allStrokes = List<List<Offset>>.from(state.strokes)
+        ..add(List.from(state.currentStroke));
+
+      final drawn = <Offset>[for (final s in allStrokes) ...s];
+      final targets = state.guideStrokes
+          .map((g) => g
+          .map((p) => Offset(p.dx * size, p.dy * size))
+          .toList())
+          .toList();
+
+      // Every guide stroke must be substantially covered by the child's ink.
+      final tol = size * 0.05;
+      double worst = 1.0;
+      for (final t in targets) {
+        int hit = 0;
+        for (final g in t) {
+          for (final p in drawn) {
+            if ((p - g).distance <= tol) {
+              hit++;
+              break;
+            }
+          }
+        }
+        final cov = t.isEmpty ? 1.0 : hit / t.length;
+        if (cov < worst) worst = cov;
+      }
+
+      final done = worst >= 0.8;
+      emit(state.copyWith(
+        strokes: allStrokes,
+        currentStroke: [],
+        accuracy: worst,
+        status: done ? WritingStatus.success : WritingStatus.idle,
+        attemptCount:
+        done ? state.attemptCount + 1 : state.attemptCount,
+        strokeMissed: false,
+      ));
+      return;
+    }
 
     // ── Guided mode (English & numbers): validate against the stroke the
     // hand just demonstrated; advance stroke-by-stroke. ──
@@ -299,7 +348,7 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
 
   Future<void> _onNext(
       WritingNextCharacter event, Emitter<WritingState> emit) async {
-    emit(WritingState(character: event.character));
+    emit(WritingState(character: event.character, freeDraw: event.freeDraw));
     final guide = _guideStrokesFor(event.character);
     if (guide.isNotEmpty) {
       _buildMaskFromStrokes(guide);
@@ -814,7 +863,8 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
       'hindi': 'NotoSansDevanagari',
       'tamil': 'NotoSansTamil',
       // School-style print letterforms for beginners (single-story a, g).
-      'english': 'Andika',
+      'english_upper': 'Andika',
+      'english_lower': 'Andika',
       'numbers': 'Andika',
     };
     return map[languageId];
