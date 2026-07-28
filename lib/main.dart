@@ -13,9 +13,18 @@ import 'injection_container.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp
-  ]);
+  // Portrait on phones, any orientation on tablets (iPad apps are often
+  // held in landscape, and the tracing canvas benefits from the width).
+  final shortestSide =
+      WidgetsBinding.instance.platformDispatcher.views.first.physicalSize
+          .shortestSide /
+          WidgetsBinding.instance.platformDispatcher.views.first
+              .devicePixelRatio;
+  await SystemChrome.setPreferredOrientations(
+    shortestSide >= 600
+        ? DeviceOrientation.values
+        : [DeviceOrientation.portraitUp],
+  );
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

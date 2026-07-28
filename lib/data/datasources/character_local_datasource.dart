@@ -15,11 +15,32 @@ class CharacterLocalDataSourceImpl implements CharacterLocalDataSource {
   @override
   List<Language> getLanguages() => [
     const Language(
-      id: LanguageId.english,
-      displayName: 'English',
-      nativeName: 'English',
-      emoji: '🇬🇧',
+      id: LanguageId.lines,
+      displayName: 'Lines',
+      nativeName: '| — /',
+      emoji: '✏️',
       fontFamily: 'Nunito',
+    ),
+    const Language(
+      id: LanguageId.shapes,
+      displayName: 'Shapes',
+      nativeName: '○ △ □',
+      emoji: '🔷',
+      fontFamily: 'Nunito',
+    ),
+    const Language(
+      id: LanguageId.englishUpper,
+      displayName: 'Capital Letters',
+      nativeName: 'A B C',
+      emoji: '🔠',
+      fontFamily: 'Andika',
+    ),
+    const Language(
+      id: LanguageId.englishLower,
+      displayName: 'Small Letters',
+      nativeName: 'a b c',
+      emoji: '🔡',
+      fontFamily: 'Andika',
     ),
     const Language(
       id: LanguageId.numbers,
@@ -57,7 +78,19 @@ class CharacterLocalDataSourceImpl implements CharacterLocalDataSource {
   @override
   List<CharacterModel> getCharacters(String languageId) {
     switch (languageId) {
-      case LanguageId.english:
+      case LanguageId.lines:
+        return _lineCharacters();
+      case LanguageId.shapes:
+        return _shapeCharacters();
+      case LanguageId.englishUpper:
+        return _englishCharacters()
+            .where((c) => c.category == CharacterCategory.uppercase)
+            .toList();
+      case LanguageId.englishLower:
+        return _englishCharacters()
+            .where((c) => c.category == CharacterCategory.lowercase)
+            .toList();
+      case LanguageId.english: // legacy id → everything
         return _englishCharacters();
       case LanguageId.numbers:
         return _numberCharacters();
@@ -70,6 +103,66 @@ class CharacterLocalDataSourceImpl implements CharacterLocalDataSource {
       default:
         return [];
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Pre-writing lines — the very first strokes, before shapes and letters
+  // ---------------------------------------------------------------------------
+  List<CharacterModel> _lineCharacters() {
+    final data = [
+      ['|', 'Standing Line', 'standing line', 'standing'],
+      ['—', 'Sleeping Line', 'sleeping line', 'sleeping'],
+      ['\\', 'Left Slanting Line', 'slanting line', 'slant_left'],
+      ['/', 'Right Slanting Line', 'slanting line', 'slant_right'],
+      ['⌢', 'Rainbow Curve', 'rainbow curve', 'curve_up'],
+      ['⌣', 'Smile Curve', 'smile curve', 'curve_down'],
+      ['(', 'Left Curve', 'left curve', 'curve_left'],
+      [')', 'Right Curve', 'right curve', 'curve_right'],
+      ['Ʌ', 'Zig-Zag Line', 'zig zag line', 'zigzag'],
+      ['∿', 'Wave Line', 'wave line', 'wave'],
+      ['@', 'Spiral', 'spiral', 'spiral'],
+    ];
+    return List.generate(
+      data.length,
+          (i) => CharacterModel(
+        id: 'line_${data[i][3]}',
+        symbol: data[i][0],
+        name: data[i][1],
+        pronunciation: data[i][2],
+        languageId: LanguageId.lines,
+        category: CharacterCategory.line,
+        orderIndex: i,
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Shapes — the easiest starting point for little hands
+  // ---------------------------------------------------------------------------
+  List<CharacterModel> _shapeCharacters() {
+    final data = [
+      ['○', 'Circle', 'circle'],
+      ['□', 'Square', 'square'],
+      ['△', 'Triangle', 'triangle'],
+      ['▭', 'Rectangle', 'rectangle'],
+      ['◇', 'Diamond', 'diamond'],
+      ['⬭', 'Oval', 'oval'],
+      ['☆', 'Star', 'star'],
+      ['♡', 'Heart', 'heart'],
+      ['✚', 'Cross', 'cross'],
+    ];
+    return List.generate(
+      data.length,
+          (i) => CharacterModel(
+        id: 'shape_${data[i][2]}',
+        symbol: data[i][0],
+        name: data[i][1],
+        pronunciation: data[i][2],
+        languageId: LanguageId.shapes,
+        category: CharacterCategory.shape,
+        orderIndex: i,
+      ),
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -114,7 +207,7 @@ class CharacterLocalDataSourceImpl implements CharacterLocalDataSource {
         symbol: uppercaseData[i][0],
         name: uppercaseData[i][1],
         pronunciation: uppercaseData[i][2],
-        languageId: LanguageId.english,
+        languageId: LanguageId.englishUpper,
         category: CharacterCategory.uppercase,
         orderIndex: i,
       ));
@@ -125,7 +218,7 @@ class CharacterLocalDataSourceImpl implements CharacterLocalDataSource {
         symbol: lowercaseData[i][0],
         name: lowercaseData[i][1],
         pronunciation: lowercaseData[i][2],
-        languageId: LanguageId.english,
+        languageId: LanguageId.englishLower,
         category: CharacterCategory.lowercase,
         orderIndex: 26 + i,
       ));

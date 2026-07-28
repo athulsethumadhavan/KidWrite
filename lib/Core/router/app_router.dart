@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../domain/entities/character.dart';
 import '../../Presentation/pages/character_list_page.dart';
 import '../../Presentation/pages/home_page.dart';
+import '../../Presentation/pages/onboarding_page.dart';
 import '../../Presentation/pages/splash_page.dart';
 import '../../Presentation/pages/writing_practice_page.dart';
 
@@ -13,6 +14,12 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/',
       builder: (_, __) => const SplashPage(),
+    ),
+    GoRoute(
+      path: '/onboarding',
+      builder: (context, __) => OnboardingPage(
+        onDone: () => context.go('/home'),
+      ),
     ),
     GoRoute(
       path: '/home',

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:kid_write/Core/Constants/app_constants.dart';
+import 'package:kid_write/Core/services/review_prompt_service.dart';
 import 'package:kid_write/Core/services/update_checker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -47,7 +48,7 @@ class _HomePageState extends State<HomePage> {
 class _HomeView extends StatelessWidget {
   const _HomeView();
 
-  static const _supportEmail = 'atsdigiservice@gmail.com+kidwrite@gmail.com';
+  static const _supportEmail = AppConstants.supportEmail;
   static const _privacyPolicyUrl =
       'https://athulsethumadhavan.github.io/KidWrite/privacy_policy.html';
   static const _appStoreId = '6781143198';
@@ -84,6 +85,8 @@ class _HomeView extends StatelessWidget {
                 subtitle: 'Enjoying the app? Leave us a rating!',
                 onTap: () async {
                   Navigator.pop(sheetContext);
+                  // They rated on their own — stop auto-asking later.
+                  await ReviewPromptService.markReviewedManually();
                   final review = InAppReview.instance;
                   try {
                     if (await review.isAvailable()) {
@@ -263,9 +266,24 @@ class _HomeView extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    // Settings: rating / support / privacy / about
+                    // Settings: rating / support / privacy / about.
+                    // LONG PRESS only — keeps little fingers out (and is
+                    // explained during onboarding).
                     GestureDetector(
-                      onTap: () => _showSettingsSheet(context),
+                      onLongPress: () => _showSettingsSheet(context),
+                      onTap: () {
+                        ScaffoldMessenger.of(context)
+                          ..hideCurrentSnackBar()
+                          ..showSnackBar(
+                            const SnackBar(
+                              behavior: SnackBarBehavior.floating,
+                              duration: Duration(seconds: 2),
+                              content: Text(
+                                'Grown-ups: press and hold to open settings',
+                              ),
+                            ),
+                          );
+                      },
                       child: Container(
                         width: 48,
                         height: 48,

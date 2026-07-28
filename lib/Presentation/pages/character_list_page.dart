@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../Core/tracing/letter_strokes.dart';
 import '../../core/widgets/animated_background.dart';
 import '../../domain/entities/character.dart';
 import '../../domain/entities/progress.dart';
@@ -181,7 +182,10 @@ class _CharacterListPageState extends State<CharacterListPage> {
 
   String _languageTitle() {
     const titles = {
-      'english': 'English ✨',
+      'lines': 'Lines ✏️',
+      'shapes': 'Shapes 🔷',
+      'english_upper': 'Capital Letters 🔠',
+      'english_lower': 'Small Letters 🔡',
       'numbers': 'Numbers 🔢',
       'malayalam': 'Malayalam മ',
       'hindi': 'Hindi क',
@@ -395,7 +399,8 @@ class _LevelNode extends StatelessWidget {
       'malayalam': 'NotoSansMalayalam',
       'hindi': 'NotoSansDevanagari',
       'tamil': 'NotoSansTamil',
-      'english': 'Andika',
+      'english_upper': 'Andika',
+      'english_lower': 'Andika',
       'numbers': 'Andika',
     };
     return map[languageId];
@@ -482,7 +487,24 @@ class _LevelNode extends StatelessWidget {
                       ),
                     ),
                   Center(
-                    child: Text(
+                    child: (languageId == 'shapes' ||
+                        languageId == 'lines')
+                    // Shapes are painted from their own stroke data so
+                    // they look identical on every device.
+                        ? SizedBox(
+                      width: size * 0.56,
+                      height: size * 0.56,
+                      child: CustomPaint(
+                        painter: _ShapeGlyphPainter(
+                          strokes:
+                          LetterStrokes.of(character.symbol) ??
+                              const [],
+                          color: Colors.white.withValues(
+                              alpha: isLocked ? 0.28 : 1.0),
+                        ),
+                      ),
+                    )
+                        : Text(
                       character.symbol,
                       style: TextStyle(
                         fontSize: size * 0.52,
@@ -615,4 +637,39 @@ class _Chip extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Paints a shape from its tracing stroke data (used on the level map so
+/// shapes render identically everywhere, without relying on font glyphs).
+class _ShapeGlyphPainter extends CustomPainter {
+  final List<List<Offset>> strokes;
+  final Color color;
+
+  _ShapeGlyphPainter({required this.strokes, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (strokes.isEmpty) return;
+    // Fit the 0..1 stroke space to this box.
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = size.width * 0.13
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..style = PaintingStyle.stroke;
+
+    for (final s in strokes) {
+      if (s.length < 2) continue;
+      final path = Path()
+        ..moveTo(s.first.dx * size.width, s.first.dy * size.height);
+      for (int i = 1; i < s.length; i++) {
+        path.lineTo(s[i].dx * size.width, s[i].dy * size.height);
+      }
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ShapeGlyphPainter old) =>
+      old.strokes != strokes || old.color != color;
 }

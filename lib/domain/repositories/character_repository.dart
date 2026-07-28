@@ -10,7 +10,4 @@ abstract class CharacterRepository {
     required String languageId,
     String? category,
   });
-
-  /// Returns a single character by its [id].
-  Future<Character?> getCharacterById(String id);
 }

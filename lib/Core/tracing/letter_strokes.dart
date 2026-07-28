@@ -40,6 +40,73 @@ class LetterStrokes {
   static List<Offset> _cat(List<List<Offset>> parts) =>
       parts.expand((p) => p).toList();
 
+  /// Closed polygon through [pts] (returns to the first point).
+  static List<Offset> _poly(List<Offset> pts, [int per = 10]) {
+    final out = <Offset>[];
+    for (int i = 0; i < pts.length; i++) {
+      final a = pts[i], b = pts[(i + 1) % pts.length];
+      for (int k = 0; k < per; k++) {
+        out.add(Offset.lerp(a, b, k / per)!);
+      }
+    }
+    out.add(pts.first);
+    return out;
+  }
+
+  /// Five-pointed star, drawn as one closed outline.
+  static List<Offset> _star(double cx, double cy, double rOuter,
+      double rInner) {
+    final pts = <Offset>[];
+    for (int i = 0; i < 10; i++) {
+      final r = i.isEven ? rOuter : rInner;
+      final a = -pi / 2 + i * pi / 5;
+      pts.add(Offset(cx + r * cos(a), cy + r * sin(a)));
+    }
+    return _poly(pts, 6);
+  }
+
+  /// Sine wave across the box — the classic "wave" pre-writing pattern.
+  static List<Offset> _wave(double x1, double x2, double cy, double amp,
+      double cycles,
+      [int n = 60]) =>
+      List.generate(n + 1, (i) {
+        final t = i / n;
+        return Offset(
+          x1 + (x2 - x1) * t,
+          cy + amp * sin(2 * pi * cycles * t),
+        );
+      });
+
+  /// Outward spiral (loop pattern), starting at the centre.
+  static List<Offset> _spiral(double cx, double cy, double rMax,
+      double turns,
+      [int n = 90]) =>
+      List.generate(n + 1, (i) {
+        final t = i / n;
+        final a = 2 * pi * turns * t - pi / 2;
+        final r = rMax * t;
+        return Offset(cx + r * cos(a), cy + r * sin(a));
+      });
+
+  /// Classic heart curve, sampled as one closed stroke starting at the
+  /// bottom tip.
+  static List<Offset> _heart(double cx, double cy, double scale,
+      [int n = 60]) {
+    final pts = <Offset>[];
+    for (int i = 0; i <= n; i++) {
+      // Start at the bottom point (t = -pi) and go all the way round.
+      final t = -pi + 2 * pi * i / n;
+      final x = 16 * pow(sin(t), 3).toDouble();
+      final y = 13 * cos(t) -
+          5 * cos(2 * t) -
+          2 * cos(3 * t) -
+          cos(4 * t);
+      // Normalise: x ∈ [-16,16], y ∈ [-17,12]; y is up in the formula.
+      pts.add(Offset(cx + scale * x / 16, cy - scale * y / 15));
+    }
+    return pts;
+  }
+
   // ── Stroke data ───────────────────────────────────────────────────────────
 
   static final Map<String, List<List<Offset>>> _data = {
@@ -375,5 +442,68 @@ class LetterStrokes {
       _arc(.48, .35, .19, .19, -20, -340, 26),
       _ln(.67, .36, .6, .85),
     ],
+
+    // Shapes -----------------------------------------------------------------
+    // Simple, closed outlines a small child can trace in one motion.
+    '○': [_arc(.5, .5, .34, .34, -90, 270, 40)],
+    '□': [
+      _poly([
+        const Offset(.2, .22),
+        const Offset(.8, .22),
+        const Offset(.8, .82),
+        const Offset(.2, .82),
+      ]),
+    ],
+    '△': [
+      _poly([
+        const Offset(.5, .16),
+        const Offset(.85, .84),
+        const Offset(.15, .84),
+      ]),
+    ],
+    '▭': [
+      _poly([
+        const Offset(.12, .3),
+        const Offset(.88, .3),
+        const Offset(.88, .7),
+        const Offset(.12, .7),
+      ]),
+    ],
+    '◇': [
+      _poly([
+        const Offset(.5, .13),
+        const Offset(.85, .5),
+        const Offset(.5, .87),
+        const Offset(.15, .5),
+      ]),
+    ],
+    '⬭': [_arc(.5, .5, .38, .26, -90, 270, 40)],
+    '☆': [_star(.5, .52, .37, .155)],
+    '♡': [_heart(.5, .5, .38)],
+    '✚': [
+      _ln(.5, .16, .5, .84),
+      _ln(.16, .5, .84, .5),
+    ],
+
+    // Pre-writing lines -------------------------------------------------------
+    // The basic strokes children practise before shapes and letters.
+    '|': [_ln(.5, .12, .5, .88, 20)],
+    '—': [_ln(.12, .5, .88, .5, 20)],
+    '\\': [_ln(.24, .12, .76, .88, 20)],
+    '/': [_ln(.76, .12, .24, .88, 20)],
+    '⌢': [_arc(.5, .66, .36, .32, -165, -15, 30)],
+    '⌣': [_arc(.5, .34, .36, .32, 15, 165, 30)],
+    '(': [_arc(.74, .5, .36, .38, 122, 238, 30)],
+    ')': [_arc(.26, .5, .36, .38, -58, 58, 30)],
+    'Ʌ': [
+      _cat([
+        _ln(.12, .74, .32, .26, 8),
+        _ln(.32, .26, .5, .74, 8),
+        _ln(.5, .74, .68, .26, 8),
+        _ln(.68, .26, .88, .74, 8),
+      ]),
+    ],
+    '∿': [_wave(.1, .9, .5, .22, 1.75)],
+    '@': [_spiral(.5, .5, .38, 2.6)],
   };
 }

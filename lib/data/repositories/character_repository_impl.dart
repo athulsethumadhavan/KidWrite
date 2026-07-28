@@ -22,15 +22,4 @@ class CharacterRepositoryImpl implements CharacterRepository {
         .where((c) => c.category.name == category)
         .toList();
   }
-
-  @override
-  Future<Character?> getCharacterById(String id) async {
-    for (final lang in dataSource.getLanguages()) {
-      final chars = dataSource.getCharacters(lang.id);
-      try {
-        return chars.firstWhere((c) => c.id == id);
-      } catch (_) {}
-    }
-    return null;
-  }
 }

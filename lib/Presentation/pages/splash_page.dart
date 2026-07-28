@@ -7,6 +7,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/widgets/animated_background.dart';
 import '../../injection_container.dart';
 import '../blocs/music/music_bloc.dart';
+import 'onboarding_page.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -20,8 +21,9 @@ class _SplashPageState extends State<SplashPage> {
   void initState() {
     super.initState();
     sl<MusicBloc>().add(const MusicInitialize());
-    Future.delayed(AppConstants.splashDuration, () {
-      if (mounted) context.go('/home');
+    Future.delayed(AppConstants.splashDuration, () async {
+      final firstRun = await OnboardingPage.shouldShow();
+      if (mounted) context.go(firstRun ? '/onboarding' : '/home');
     });
   }
 

@@ -3,13 +3,31 @@ class AppConstants {
 
   // App metadata
   static const String appName = 'KidWrite';
-  static const String appVersion = '1.0.0';
+  /// Fallback only — the real version is read from the platform via
+  /// package_info_plus (see AppInfo). Keep in sync with pubspec.yaml.
+  static const String appVersion = '1.2.0';
 
   // Shared prefs keys
   static const String prefSelectedLanguage = 'selected_language';
   static const String prefProgressPrefix = 'progress_';
   static const String prefMusicEnabled = 'music_enabled';
   static const String prefSoundEnabled = 'sound_enabled';
+
+  static const String prefOnboardingDone = 'onboarding_done';
+
+  // Review prompt
+  static const String prefLevelsCompleted = 'levels_completed';
+  static const String prefReviewDone = 'review_done';
+  static const String prefReviewNextAt = 'review_next_at';
+
+  /// Levels (letters finished with 3 stars) before the first review ask.
+  static const int reviewFirstPromptAfter = 3;
+
+  /// Extra levels to wait when the parent taps "Maybe later".
+  static const int reviewSnoozeLevels = 5;
+
+  /// Support address used for feedback and help.
+  static const String supportEmail = 'atsdigiservice+kidwrite@gmail.com';
 
   // Animation durations
   static const Duration splashDuration = Duration(seconds: 3);
@@ -40,9 +58,13 @@ class AppConstants {
 /// Supported language IDs
 class LanguageId {
   LanguageId._();
-  static const String english = 'english';
+  static const String english = 'english';        // legacy (kept for old progress)
+  static const String englishUpper = 'english_upper';
+  static const String englishLower = 'english_lower';
   static const String malayalam = 'malayalam';
   static const String hindi = 'hindi';
   static const String tamil = 'tamil';
   static const String numbers = 'numbers';
+  static const String shapes = 'shapes';
+  static const String lines = 'lines';
 }
