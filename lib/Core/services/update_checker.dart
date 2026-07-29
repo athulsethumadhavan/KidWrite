@@ -18,7 +18,7 @@ import '../constants/app_colors.dart';
 /// never get stuck on a network check.
 ///
 /// To require an update, edit version.json in the GitHub Pages repo
-/// (template lives in the project root as version.json).
+/// (the file it serves lives in this repo at docs/version.json).
 class UpdateChecker {
   UpdateChecker._();
 

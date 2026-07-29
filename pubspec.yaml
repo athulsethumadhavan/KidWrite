@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.2.0+1
+version: 1.2.0+3
 
 environment:
   sdk: ^3.12.2
@@ -89,6 +89,16 @@ flutter:
         - asset: assets/fonts/Andika-Regular.ttf
         - asset: assets/fonts/Andika-Bold.ttf
           weight: 700
+    # Indic scripts — referenced by Malayalam / Hindi / Tamil characters.
+    - family: NotoSansMalayalam
+      fonts:
+        - asset: assets/fonts/NotoSansMalayalam-Regular.ttf
+    - family: NotoSansDevanagari
+      fonts:
+        - asset: assets/fonts/NotoSansDevanagari-Regular.ttf
+    - family: NotoSansTamil
+      fonts:
+        - asset: assets/fonts/NotoSansTamil-Regular.ttf
 
 #  fonts:
 #    - family: NotoSansMalayalam
