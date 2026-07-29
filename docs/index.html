@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KidWrite 1.2.0 — Press Kit</title>
+<meta name="description" content="KidWrite is a free, offline handwriting app for children under 6, teaching lines, shapes, numbers and letters across English, Malayalam, Hindi and Tamil. No ads, no in-app purchases, no data collection.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✏️</text></svg>">
+<style>
+  :root{
+    --ink:#2c3e50;
+    --muted:#6b7c8c;
+    --primary:#4a90d9;
+    --green:#4caf82;
+    --orange:#f2884b;
+    --purple:#8e5bc4;
+    --line:#e4ebf1;
+    --card:#ffffff;
+    --bg:#f7f9fb;
+    --maxw:1080px;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:var(--bg);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px;}
+  a{color:var(--primary);}
+
+  /* ---------- hero ---------- */
+  header.hero{
+    background:
+      radial-gradient(900px 420px at 15% -10%, #ffe9dd 0%, rgba(255,233,221,0) 60%),
+      radial-gradient(800px 460px at 88% 0%, #dff0e6 0%, rgba(223,240,230,0) 60%),
+      linear-gradient(180deg,#fdf6f1 0%, #f7f9fb 100%);
+    border-bottom:1px solid var(--line);
+    padding:64px 0 56px;
+  }
+  .badge{
+    display:inline-block;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:6px 16px;
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:22px;
+  }
+  h1{
+    font-size:clamp(34px,5.4vw,54px);
+    line-height:1.1;
+    margin:0 0 18px;
+    letter-spacing:-.02em;
+    font-weight:800;
+  }
+  .lede{
+    font-size:clamp(17px,2.1vw,21px);
+    color:var(--muted);
+    max-width:62ch;
+    margin:0 0 30px;
+  }
+  .lede strong{color:var(--ink);font-weight:600;}
+  .facts{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:30px;
+  }
+  .fact{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:8px 15px;
+    font-size:14px;
+    font-weight:600;
+  }
+  .fact span{color:var(--muted);font-weight:500;}
+  .cta{display:flex;flex-wrap:wrap;gap:12px;}
+  .btn{
+    display:inline-block;
+    text-decoration:none;
+    font-weight:700;
+    font-size:15px;
+    padding:12px 24px;
+    border-radius:14px;
+    border:1px solid transparent;
+  }
+  .btn.primary{background:var(--primary);color:#fff;}
+  .btn.ghost{background:#fff;color:var(--ink);border-color:var(--line);}
+
+  /* ---------- sections ---------- */
+  section{padding:60px 0;border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  h2{
+    font-size:clamp(24px,3.2vw,32px);
+    letter-spacing:-.015em;
+    margin:0 0 10px;
+    font-weight:800;
+  }
+  .sub{color:var(--muted);max-width:66ch;margin:0 0 36px;font-size:17px;}
+
+  /* ---------- the story ---------- */
+  .cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:18px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:26px;
+  }
+  .card .k{
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.09em;
+    text-transform:uppercase;
+    color:var(--primary);
+    margin-bottom:10px;
+  }
+  .card.g .k{color:var(--green);}
+  .card.o .k{color:var(--orange);}
+  .card.p .k{color:var(--purple);}
+  .card h3{margin:0 0 8px;font-size:19px;font-weight:700;}
+  .card p{margin:0;color:var(--muted);font-size:15px;}
+
+  /* ---------- screens ---------- */
+  .shots{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+    gap:30px 24px;
+  }
+  figure{margin:0;}
+  figure img{
+    width:100%;
+    display:block;
+    border-radius:22px;
+    border:1px solid var(--line);
+    background:#fff;
+    box-shadow:0 10px 30px rgba(44,62,80,.10);
+  }
+  figcaption{
+    margin-top:14px;
+    font-size:14px;
+    color:var(--muted);
+  }
+  figcaption b{display:block;color:var(--ink);font-size:15px;margin-bottom:2px;}
+
+  /* ---------- progression strip ---------- */
+  .steps{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+    gap:22px;
+    counter-reset:s;
+  }
+  .step{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:24px;
+    position:relative;
+  }
+  .step::before{
+    counter-increment:s;
+    content:counter(s);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:34px;height:34px;
+    border-radius:50%;
+    background:var(--primary);
+    color:#fff;
+    font-weight:800;
+    font-size:15px;
+    margin-bottom:14px;
+  }
+  .step:nth-child(2)::before{background:var(--green);}
+  .step:nth-child(3)::before{background:var(--orange);}
+  .step h3{margin:0 0 6px;font-size:17px;}
+  .step p{margin:0;font-size:15px;color:var(--muted);}
+
+  /* ---------- privacy ---------- */
+  .privacy{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:34px;
+  }
+  .privacy ul{
+    margin:0;
+    padding:0;
+    list-style:none;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:14px 26px;
+  }
+  .privacy li{
+    padding-left:30px;
+    position:relative;
+    font-size:15.5px;
+  }
+  .privacy li::before{
+    content:"✓";
+    position:absolute;left:0;top:0;
+    color:var(--green);
+    font-weight:800;
+  }
+
+  /* ---------- languages ---------- */
+  .langs{display:flex;flex-wrap:wrap;gap:12px;}
+  .lang{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:16px 22px;
+    min-width:150px;
+  }
+  .lang .native{font-size:22px;font-weight:700;margin-bottom:2px;}
+  .lang .en{font-size:13px;color:var(--muted);}
+
+  /* ---------- contact ---------- */
+  .contact{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+    gap:20px;
+  }
+  .contact div b{display:block;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+  footer{
+    padding:34px 0 50px;
+    color:var(--muted);
+    font-size:14px;
+  }
+  @media (max-width:640px){
+    header.hero{padding:44px 0 40px;}
+    section{padding:44px 0;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="badge">Press Kit · Version 1.2.0</div>
+    <h1>KidWrite teaches a child<br>to write — then lets go.</h1>
+    <p class="lede">
+      A free, offline handwriting app for children under 6. It covers the full pre-writing path
+      a teacher actually follows — <strong>lines, then shapes, then numbers and letters</strong> —
+      across <strong>English, Malayalam, Hindi and Tamil</strong>.
+      No ads, no in-app purchases, no accounts, and no data collection of any kind.
+    </p>
+
+    <div class="facts">
+      <div class="fact">Free <span>· no IAP, no ads</span></div>
+      <div class="fact">4 scripts <span>· English, Malayalam, Hindi, Tamil</span></div>
+      <div class="fact">Fully offline <span>· zero data collected</span></div>
+      <div class="fact">iPhone &amp; iPad <span>· universal</span></div>
+      <div class="fact">Ages 4–6 <span>· Kids category</span></div>
+    </div>
+
+    <div class="cta">
+      <a class="btn primary" href="https://apps.apple.com/in/app/kidwrite/id6781143198">View on the App Store</a>
+      <a class="btn ghost" href="privacy_policy.html">Privacy Policy</a>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>Why KidWrite exists</h2>
+    <p class="sub">
+      Hundreds of millions of children learn to write Malayalam, Hindi and Tamil — and almost
+      nothing on the App Store helps them do it. KidWrite treats those scripts as first-class,
+      each with its own bundled typeface and spoken pronunciation, rather than bolting them onto
+      an English app.
+    </p>
+    <div class="cards">
+      <div class="card">
+        <div class="k">The gap</div>
+        <h3>South Asian script literacy</h3>
+        <p>Built by one developer in Kerala, for families whose children learn a script the
+           App Store has largely ignored.</p>
+      </div>
+      <div class="card g">
+        <div class="k">The method</div>
+        <h3>Correct stroke order, always</h3>
+        <p>A cartoon hand demonstrates every stroke the way it is taught in school — built from
+           hand-drawn letterforms, not a display font.</p>
+      </div>
+      <div class="card o">
+        <div class="k">The difference</div>
+        <h3>The third star removes the guide</h3>
+        <p>After two guided attempts the hand and dotted path disappear. The child writes from
+           memory, and the app recognises the finished letter.</p>
+      </div>
+      <div class="card p">
+        <div class="k">The promise</div>
+        <h3>Safe on first launch</h3>
+        <p>No setup, no account, nothing to buy, nothing collected. Hand a 4-year-old the
+           device and walk away.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Trace, then trace again, then write it yourself</h2>
+    <p class="sub">
+      Most tracing apps never let go of the child's hand. KidWrite does — deliberately, and on
+      the third attempt.
+    </p>
+    <div class="steps">
+      <div class="step">
+        <h3>Follow the hand</h3>
+        <p>Stroke by stroke, in school order. Ink only registers inside the letter, so scribbling
+           never counts as success.</p>
+      </div>
+      <div class="step">
+        <h3>Do it again</h3>
+        <p>The second star is earned the same way, reinforcing the sequence until the shape feels
+           familiar.</p>
+      </div>
+      <div class="step">
+        <h3>Your turn</h3>
+        <p>No hand, no dots. Any stroke order is accepted — the app checks the finished letter.
+           Three stars unlock the next one.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Screens</h2>
+    <p class="sub">Captured on iPhone, KidWrite 1.2.0.</p>
+    <div class="shots">
+      <figure>
+        <img src="press/01-home.jpg" alt="KidWrite home screen showing Lines, Shapes, Capital Letters, Small Letters, Numbers and Malayalam">
+        <figcaption><b>The full path</b>Lines and Shapes come before letters — the order a teacher uses.</figcaption>
+      </figure>
+      <figure>
+        <img src="press/03-guided-shape.jpg" alt="A circle being traced with a cartoon hand pointing along the dotted guide path">
+        <figcaption><b>Stroke 1 of 1</b>The hand shows exactly where to start and which way to go.</figcaption>
+      </figure>
+      <figure>
+        <img src="press/06-guided-letter.jpg" alt="Lowercase letter a with a cartoon hand demonstrating the first of two strokes">
+        <figcaption><b>Correct letterforms</b>Single-story <i>a</i> and <i>g</i>, drawn as children are taught to write them.</figcaption>
+      </figure>
+      <figure>
+        <img src="press/07-letter-done.jpg" alt="A completed lowercase a traced in purple and teal crayon with a gold star">
+        <figcaption><b>A star per success</b>Each stroke gets its own crayon colour.</figcaption>
+      </figure>
+      <figure>
+        <img src="press/04-your-turn.jpg" alt="Empty circle outline with the message Your turn! Write it all by yourself">
+        <figcaption><b>The third star</b>Guide removed. The child writes it unaided.</figcaption>
+      </figure>
+      <figure>
+        <img src="press/05-celebration.jpg" alt="Confetti celebration after completing a shape">
+        <figcaption><b>Earned, not given</b>Confetti only when the letter is genuinely complete.</figcaption>
+      </figure>
+      <figure>
+        <img src="press/02-map-capital.jpg" alt="Winding level map showing letters A to E as bubbles with three stars above each">
+        <figcaption><b>An adventure map</b>Progress a pre-reader can see at a glance.</figcaption>
+      </figure>
+      <figure>
+        <img src="press/08-map-locked.jpg" alt="Small letters map showing locked letters after the first one">
+        <figcaption><b>One letter at a time</b>Three stars unlock what comes next.</figcaption>
+      </figure>
+      <figure>
+        <img src="press/09-parent-settings.jpg" alt="Parent settings sheet with Rate, Help and Support, Privacy Policy and About">
+        <figcaption><b>Grown-ups only</b>Settings sit behind a long press, out of a toddler's reach.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Four scripts, treated equally</h2>
+    <p class="sub">
+      Each language ships with its own bundled typeface and spoken pronunciation, so nothing
+      depends on the device having the right font or voice installed.
+    </p>
+    <div class="langs">
+      <div class="lang"><div class="native">ABC abc 123</div><div class="en">English &amp; Numbers</div></div>
+      <div class="lang"><div class="native">മലയാളം</div><div class="en">Malayalam</div></div>
+      <div class="lang"><div class="native">हिन्दी</div><div class="en">Hindi</div></div>
+      <div class="lang"><div class="native">தமிழ்</div><div class="en">Tamil</div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Privacy is the product, not a policy page</h2>
+    <p class="sub">
+      KidWrite was built so that a parent never has to think about what it is doing in the
+      background — because it isn't doing anything.
+    </p>
+    <div class="privacy">
+      <ul>
+        <li>No analytics, no tracking, no identifiers</li>
+        <li>No accounts and no sign-in</li>
+        <li>No ads and no third-party SDKs</li>
+        <li>No in-app purchases of any kind</li>
+        <li>Works fully offline — flights, cars, anywhere</li>
+        <li>Progress is stored only on the device</li>
+        <li>Nothing is ever uploaded or shared</li>
+        <li>The only network call is a version check</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>New in 1.2.0</h2>
+    <p class="sub">The release that completes the learning path.</p>
+    <div class="cards">
+      <div class="card">
+        <div class="k">New</div>
+        <h3>Pre-writing Lines</h3>
+        <p>Eleven patterns — standing, sleeping and slanting lines, rainbow and smile curves,
+           zig-zags, waves and spirals.</p>
+      </div>
+      <div class="card g">
+        <div class="k">New</div>
+        <h3>Shapes</h3>
+        <p>Circle, square, triangle, rectangle, diamond, oval, star, heart and cross.</p>
+      </div>
+      <div class="card o">
+        <div class="k">New</div>
+        <h3>Write it yourself</h3>
+        <p>The third star removes the guide entirely and accepts any stroke order.</p>
+      </div>
+      <div class="card p">
+        <div class="k">New</div>
+        <h3>Adventure map</h3>
+        <p>Letters sit along a winding path, with stars and locks replacing the old grid.</p>
+      </div>
+      <div class="card">
+        <div class="k">Improved</div>
+        <h3>Capital and small, separated</h3>
+        <p>Two sections instead of one, so a child can start wherever they are ready.</p>
+      </div>
+      <div class="card g">
+        <div class="k">Improved</div>
+        <h3>Onboarding &amp; iPad</h3>
+        <p>A short first-run guide for parents, and proper landscape support on iPad.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Contact</h2>
+    <div class="contact">
+      <div>
+        <b>App Store</b>
+        <a href="https://apps.apple.com/in/app/kidwrite/id6781143198">KidWrite · id6781143198</a>
+      </div>
+      <div>
+        <b>Google Play</b>
+        <a href="https://play.google.com/store/apps/details?id=com.atsIOSDev.kidWrite">com.atsIOSDev.kidWrite</a>
+      </div>
+      <div>
+        <b>Press &amp; support</b>
+        <a href="mailto:atsdigiservice+kidwrite@gmail.com">atsdigiservice+kidwrite@gmail.com</a>
+      </div>
+      <div>
+        <b>Privacy policy</b>
+        <a href="privacy_policy.html">privacy_policy.html</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    KidWrite 1.2.0 — built by Athul Sethumadhavan. Screenshots on this page may be used for
+    editorial coverage of the app.
+  </div>
+</footer>
+
+</body>
+</html>
