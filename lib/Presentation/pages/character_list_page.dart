@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_constants.dart';
 import '../../Core/tracing/letter_strokes.dart';
 import '../../core/widgets/animated_background.dart';
 import '../../domain/entities/character.dart';
@@ -136,15 +137,21 @@ class _CharacterListPageState extends State<CharacterListPage> {
                       // Sequential unlocking over the FULL letter order:
                       // a letter opens once the previous one has 3 stars.
                       final unlockedIds = <String>{};
-                      for (int i = 0; i < _characters.length; i++) {
-                        if (i == 0) {
-                          unlockedIds.add(_characters[i].id);
-                          continue;
-                        }
-                        final prev =
-                            progressMap[_characters[i - 1].id];
-                        if ((prev?.successCount ?? 0) >= 3) {
-                          unlockedIds.add(_characters[i].id);
+                      if (AppConstants.unlockAllLetters) {
+                        // TESTING: every letter open, so the whole set can be
+                        // checked without grinding through it in order.
+                        unlockedIds.addAll(_characters.map((c) => c.id));
+                      } else {
+                        for (int i = 0; i < _characters.length; i++) {
+                          if (i == 0) {
+                            unlockedIds.add(_characters[i].id);
+                            continue;
+                          }
+                          final prev =
+                              progressMap[_characters[i - 1].id];
+                          if ((prev?.successCount ?? 0) >= 3) {
+                            unlockedIds.add(_characters[i].id);
+                          }
                         }
                       }
 
@@ -504,15 +511,30 @@ class _LevelNode extends StatelessWidget {
                         ),
                       ),
                     )
-                        : Text(
-                      character.symbol,
-                      style: TextStyle(
-                        fontSize: size * 0.52,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white
-                            .withValues(alpha: isLocked ? 0.28 : 1.0),
-                        fontFamily: _fontFamily(),
-                        height: 1.0,
+                    // Two-part symbols (അം, അഃ) are wider than one letter and
+                    // were wrapping, dropping the mark onto a second line
+                    // underneath. Keep it on one line and shrink to fit so the
+                    // mark stays beside the letter.
+                        : SizedBox(
+                      width: size * 0.72,
+                      height: size * 0.60,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          character.symbol,
+                          maxLines: 1,
+                          softWrap: false,
+                          overflow: TextOverflow.visible,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: size * 0.52,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white
+                                .withValues(alpha: isLocked ? 0.28 : 1.0),
+                            fontFamily: _fontFamily(),
+                            height: 1.0,
+                          ),
+                        ),
                       ),
                     ),
                   ),

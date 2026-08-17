@@ -634,6 +634,7 @@ class _CanvasSection extends StatelessWidget {
             .toDouble()
             : AppConstants.strokeWidth,
         guideStrokes: state.guideStrokes,
+        shapeStrokes: state.shapeStrokes,
         targetStrokeIndex: state.targetStrokeIndex,
         showGuideDots: !state.freeDraw,
         // Hand demo shows while waiting for the child to draw; hides while

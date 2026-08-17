@@ -22,6 +22,11 @@ class WritingState extends Equatable {
   /// Empty → free tracing with the Done button (Indic scripts).
   final List<List<Offset>> guideStrokes;
 
+  /// The letter's full shape. Usually the same as [guideStrokes], but for
+  /// Malayalam the guide is cut where the pen doubles back, while the shape
+  /// stays whole so the letter is drawn without gaps.
+  final List<List<Offset>> shapeStrokes;
+
   /// Which stroke the child should draw next.
   final int targetStrokeIndex;
 
@@ -42,6 +47,7 @@ class WritingState extends Equatable {
     this.attemptCount = 0,
     this.glyphStrokeWidth = 0,
     this.guideStrokes = const [],
+    this.shapeStrokes = const [],
     this.targetStrokeIndex = 0,
     this.strokeMissed = false,
     this.freeDraw = false,
@@ -58,6 +64,7 @@ class WritingState extends Equatable {
     int? attemptCount,
     double? glyphStrokeWidth,
     List<List<Offset>>? guideStrokes,
+    List<List<Offset>>? shapeStrokes,
     int? targetStrokeIndex,
     bool? strokeMissed,
     bool? freeDraw,
@@ -71,6 +78,7 @@ class WritingState extends Equatable {
         attemptCount: attemptCount ?? this.attemptCount,
         glyphStrokeWidth: glyphStrokeWidth ?? this.glyphStrokeWidth,
         guideStrokes: guideStrokes ?? this.guideStrokes,
+        shapeStrokes: shapeStrokes ?? this.shapeStrokes,
         targetStrokeIndex: targetStrokeIndex ?? this.targetStrokeIndex,
         strokeMissed: strokeMissed ?? this.strokeMissed,
         freeDraw: freeDraw ?? this.freeDraw,
@@ -86,6 +94,7 @@ class WritingState extends Equatable {
     attemptCount,
     glyphStrokeWidth,
     guideStrokes,
+    shapeStrokes,
     targetStrokeIndex,
     strokeMissed,
     freeDraw,

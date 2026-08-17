@@ -39,6 +39,16 @@ class AppConstants {
   // Child's ink width as a fraction of the letter's own path thickness.
   static const double inkWidthFactor = 0.6;
   static const double guideStrokeWidth = 3.0;
+  // Fraction of the canvas a font-drawn glyph may fill. Wide scripts
+  // (Malayalam, Tamil) overflow badly without this. MUST be identical in the
+  // painter and in the ink-mask builder, or the letter you see and the area
+  // that accepts ink will not line up.
+  static const double glyphFit = 0.86;
+
+  /// TESTING ONLY — opens every letter on the level map so the whole set can
+  /// be checked without earning three stars on each one first.
+  /// Set back to false before release.
+  static const bool unlockAllLetters = true;
   static const double canvasPadding = 24.0;
   // Accuracy threshold (0.0–1.0): fraction of guide points hit
   static const double successThreshold = 0.67;

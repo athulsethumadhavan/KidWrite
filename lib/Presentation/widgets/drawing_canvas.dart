@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:kid_write/Core/Constants/app_constants.dart';
 
@@ -23,6 +25,10 @@ class DrawingCanvas extends StatelessWidget {
   /// Guided tracing (English & numbers): strokes in school writing order,
   /// normalized 0..1 and aligned to the glyph. Empty → free tracing.
   final List<List<Offset>> guideStrokes;
+
+  /// Full letter shape. Same as [guideStrokes] except in Malayalam, where the
+  /// guide is cut where the pen doubles back but the drawn letter must not be.
+  final List<List<Offset>> shapeStrokes;
   final int targetStrokeIndex;
 
   /// Show the animated pointing-hand demo for the current stroke.
@@ -45,6 +51,7 @@ class DrawingCanvas extends StatelessWidget {
     required this.onStrokeEnd,
     this.strokeWidth = AppConstants.strokeWidth,
     this.guideStrokes = const [],
+    this.shapeStrokes = const [],
     this.targetStrokeIndex = 0,
     this.showHand = false,
     this.showGuideDots = true,
@@ -97,6 +104,7 @@ class DrawingCanvas extends StatelessWidget {
                   accentColor: accentColor,
                   strokeWidth: strokeWidth,
                   guideStrokes: guideStrokes,
+                  shapeStrokes: shapeStrokes,
                   targetStrokeIndex: targetStrokeIndex,
                   showGuideDots: showGuideDots,
                 ),
@@ -122,6 +130,7 @@ class _CanvasPainter extends CustomPainter {
   final Color accentColor;
   final double strokeWidth;
   final List<List<Offset>> guideStrokes;
+  final List<List<Offset>> shapeStrokes;
   final int targetStrokeIndex;
   final bool showGuideDots;
 
@@ -133,6 +142,7 @@ class _CanvasPainter extends CustomPainter {
     required this.accentColor,
     required this.strokeWidth,
     required this.guideStrokes,
+    this.shapeStrokes = const [],
     required this.targetStrokeIndex,
     required this.showGuideDots,
   });
@@ -154,6 +164,7 @@ class _CanvasPainter extends CustomPainter {
   /// dots and the hand follow, inflated to the letter's path thickness.
   void _drawLetterFromStrokes(Canvas canvas, Size size) {
     final bodyWidth = strokeWidth / AppConstants.inkWidthFactor;
+    final body = shapeStrokes.isEmpty ? guideStrokes : shapeStrokes;
 
     Path pathOf(List<Offset> stroke) {
       final path = Path()
@@ -178,7 +189,7 @@ class _CanvasPainter extends CustomPainter {
     // become circles.
     final outlineWidth = bodyWidth + AppConstants.guideStrokeWidth * 2;
     final outline = bodyPaint(AppColors.guideStroke, outlineWidth);
-    for (final s in guideStrokes) {
+    for (final s in body) {
       if (s.length >= 2) {
         canvas.drawPath(pathOf(s), outline);
       } else if (s.isNotEmpty) {
@@ -187,7 +198,7 @@ class _CanvasPainter extends CustomPainter {
       }
     }
     final fill = bodyPaint(AppColors.guideColor, bodyWidth);
-    for (final s in guideStrokes) {
+    for (final s in body) {
       if (s.length >= 2) {
         canvas.drawPath(pathOf(s), fill);
       } else if (s.isNotEmpty) {
@@ -219,7 +230,18 @@ class _CanvasPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = dotRadius * 0.35;
 
+    // Some letters are written with the pen doubling back — the stem of അ is
+    // drawn down and straight back up — so the path crosses itself and dots
+    // would be laid twice along the same line, showing up as a doubled,
+    // cluttered trail. Keep the first dot at any spot and skip later ones.
+    final placed = <Offset>[];
+    final minSeparation = dotRadius * 1.7;
+
     void dot(Offset c) {
+      for (final p in placed) {
+        if ((p - c).distanceSquared < minSeparation * minSeparation) return;
+      }
+      placed.add(c);
       canvas.drawCircle(c, dotRadius, dotFill);
       canvas.drawCircle(c, dotRadius, dotEdge);
     }
@@ -241,43 +263,51 @@ class _CanvasPainter extends CustomPainter {
   }
 
   // ── Guide character (faded background) ──────────────────────────────────
+  //
+  // Laid out UNCONSTRAINED and then scaled to fit. Passing maxWidth only
+  // clamps the reported line width — the glyph itself still overflows, which
+  // is why wide Malayalam and Tamil letters ran off both sides of the square
+  // and were centred wrongly. The same fit is applied when building the ink
+  // mask in WritingBloc, so the two always agree.
   void _drawGuide(Canvas canvas, Size size) {
-    final tp = TextPainter(
-      text: TextSpan(
-        text: character.symbol,
-        style: TextStyle(
-          fontSize: size.width * 0.72,
-          color: AppColors.guideColor,
-          fontWeight: FontWeight.w900,
-          fontFamily: _fontFamily(),
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout(maxWidth: size.width);
+    TextPainter build(Paint? stroke) => TextPainter(
+          text: TextSpan(
+            text: character.symbol,
+            style: TextStyle(
+              fontSize: size.width * 0.72,
+              color: stroke == null ? AppColors.guideColor : null,
+              foreground: stroke,
+              fontWeight: FontWeight.w900,
+              fontFamily: _fontFamily(),
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout();
 
-    final offset = Offset(
-      (size.width - tp.width) / 2,
-      (size.height - tp.height) / 2,
+    final fill = build(null);
+    if (fill.width <= 0 || fill.height <= 0) return;
+
+    final scale = math.min(
+      size.width * AppConstants.glyphFit / fill.width,
+      size.height * AppConstants.glyphFit / fill.height,
     );
-    tp.paint(canvas, offset);
 
-    // Dotted outline by painting text in stroke mode
-    final borderPainter = TextPainter(
-      text: TextSpan(
-        text: character.symbol,
-        style: TextStyle(
-          fontSize: size.width * 0.72,
-          foreground: Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = AppConstants.guideStrokeWidth
-            ..color = AppColors.guideStroke,
-          fontWeight: FontWeight.w900,
-          fontFamily: _fontFamily(),
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout(maxWidth: size.width);
-    borderPainter.paint(canvas, offset);
+    // Divided by the scale so the outline keeps a constant on-screen weight
+    // however far the glyph had to shrink.
+    final border = build(
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = AppConstants.guideStrokeWidth / scale
+        ..color = AppColors.guideStroke,
+    );
+
+    final origin = Offset(-fill.width / 2, -fill.height / 2);
+    canvas.save();
+    canvas.translate(size.width / 2, size.height / 2);
+    canvas.scale(scale);
+    fill.paint(canvas, origin);
+    border.paint(canvas, origin);
+    canvas.restore();
   }
 
   // ── Drawn strokes ─────────────────────────────────────────────────────────
@@ -352,6 +382,7 @@ class _CanvasPainter extends CustomPainter {
           old.isSuccess != isSuccess ||
           old.strokeWidth != strokeWidth ||
           old.guideStrokes != guideStrokes ||
+          old.shapeStrokes != shapeStrokes ||
           old.targetStrokeIndex != targetStrokeIndex ||
           old.showGuideDots != showGuideDots;
 }

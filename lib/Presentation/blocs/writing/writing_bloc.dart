@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kid_write/Core/Constants/app_constants.dart';
 import 'package:kid_write/Core/tracing/letter_strokes.dart';
+import 'package:kid_write/Core/tracing/malayalam_strokes.dart';
 
 import '../../../domain/entities/character.dart';
 
@@ -27,11 +28,16 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
     emit(WritingState(character: event.character, freeDraw: event.freeDraw));
     final guide = _guideStrokesFor(event.character);
     if (guide.isNotEmpty) {
-      _buildMaskFromStrokes(guide);
+      final body = _bodyWidthFor(event.character);
+      final shape = _shapeStrokesFor(event.character);
+      // Mask from the full shape, so ink is accepted everywhere the letter is
+      // drawn — including the stretches cut out of the guide.
+      _buildMaskFromStrokes(shape.isEmpty ? guide : shape, body);
       emit(state.copyWith(
         guideStrokes: guide,
+        shapeStrokes: shape.isEmpty ? guide : shape,
         targetStrokeIndex: 0,
-        glyphStrokeWidth: _craftedBodyWidth,
+        glyphStrokeWidth: body,
       ));
       return;
     }
@@ -45,16 +51,53 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
   /// letterforms, used directly. The displayed letter, the dots, the hand
   /// and the ink mask are ALL built from this same geometry, so nothing can
   /// ever mismatch. (The bundled font is only used for Indic free-tracing.)
-  List<List<Offset>> _guideStrokesFor(Character character) {
-    const guided = {
-      'english_upper',
-      'english_lower',
-      'numbers',
-      'shapes',
-      'lines',
-    };
-    if (!guided.contains(character.languageId)) return const [];
-    final crafted = LetterStrokes.of(character.symbol);
+  /// Hand-crafted geometry for this character, or null if we don't have any
+  /// (Hindi, Tamil, and the Malayalam consonants — those still free-trace over
+  /// the bundled font).
+  static const _latinLanguages = {
+    LanguageId.englishUpper,
+    LanguageId.englishLower,
+    LanguageId.numbers,
+    LanguageId.shapes,
+    LanguageId.lines,
+  };
+
+  List<List<Offset>>? _craftedFor(Character character) {
+    if (_latinLanguages.contains(character.languageId)) {
+      return LetterStrokes.of(character.symbol);
+    }
+    if (character.languageId == LanguageId.malayalam) {
+      return MalayalamStrokes.of(character.symbol);
+    }
+    return null;
+  }
+
+  /// The letter's full shape. For Malayalam this differs from the guide: the
+  /// pen doubles back over its own ink in places, and those stretches are cut
+  /// from the guide (so the demo hand never travels backwards) but must stay
+  /// in the shape, or the letter would be drawn with gaps in it.
+  List<List<Offset>>? _shapeFor(Character character) {
+    if (character.languageId == LanguageId.malayalam) {
+      return MalayalamStrokes.shapeOf(character.symbol) ??
+          MalayalamStrokes.of(character.symbol);
+    }
+    return _craftedFor(character);
+  }
+
+  /// Pen thickness for this character, as a fraction of the canvas. Malayalam
+  /// letters differ hugely in width, so a single constant is far too fat for
+  /// the wide ones and would let a child stray outside the letter.
+  double _bodyWidthFor(Character character) {
+    final ml = character.languageId == LanguageId.malayalam
+        ? MalayalamStrokes.bodyWidth(character.symbol)
+        : null;
+    // Wide letters squeeze down to a very thin measured stroke; keep a floor
+    // so a four-year-old's finger still has something it can follow.
+    final base = ml == null ? _craftedBodyBase : math.max(ml, _minBodyWidth);
+    return base * _craftedScale;
+  }
+
+  List<List<Offset>> _scaled(List<List<Offset>>? crafted) {
     if (crafted == null) return const [];
     // Scale the letter down around the canvas centre.
     const center = Offset(0.5, 0.5);
@@ -67,17 +110,26 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
     ];
   }
 
+  List<List<Offset>> _guideStrokesFor(Character character) =>
+      _scaled(_craftedFor(character));
+
+  List<List<Offset>> _shapeStrokesFor(Character character) =>
+      _scaled(_shapeFor(character));
+
   /// Overall letter size (1.0 = original crafted size).
   static const double _craftedScale = 0.8;
 
-  /// Uniform path thickness of the crafted letters (fraction of canvas),
-  /// scaled along with the letter size.
-  static const double _craftedBodyWidth = 0.10 * _craftedScale;
+  /// Default path thickness for the crafted Latin letterforms, before the
+  /// overall letter scale is applied. Malayalam overrides this per character.
+  static const double _craftedBodyBase = 0.10;
+
+  /// Thinnest guide body we'll draw, before the letter scale is applied.
+  static const double _minBodyWidth = 0.045;
 
   /// Ink-confinement mask stamped directly from the guide strokes.
-  void _buildMaskFromStrokes(List<List<Offset>> strokes) {
+  void _buildMaskFromStrokes(List<List<Offset>> strokes, double bodyWidth) {
     final mask = List<bool>.filled(_res * _res, false);
-    final r = ((_craftedBodyWidth / 2 + 0.02) * _res).round();
+    final r = ((bodyWidth / 2 + 0.02) * _res).round();
     for (final s in strokes) {
       for (final pt in s) {
         final cx = (pt.dx * _res).round(), cy = (pt.dy * _res).round();
@@ -114,7 +166,11 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
     // Self-heal: rebuild the mask if it's missing (e.g. after hot reload).
     if (_glyphMask == null && state.character != null && !_maskBuilding) {
       if (state.isGuided) {
-        _buildMaskFromStrokes(state.guideStrokes);
+        _buildMaskFromStrokes(
+            state.shapeStrokes.isEmpty
+                ? state.guideStrokes
+                : state.shapeStrokes,
+            _bodyWidthFor(state.character!));
       } else {
         _maskBuilding = true;
         _buildMask(state.character!)
@@ -351,11 +407,16 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
     emit(WritingState(character: event.character, freeDraw: event.freeDraw));
     final guide = _guideStrokesFor(event.character);
     if (guide.isNotEmpty) {
-      _buildMaskFromStrokes(guide);
+      final body = _bodyWidthFor(event.character);
+      final shape = _shapeStrokesFor(event.character);
+      // Mask from the full shape, so ink is accepted everywhere the letter is
+      // drawn — including the stretches cut out of the guide.
+      _buildMaskFromStrokes(shape.isEmpty ? guide : shape, body);
       emit(state.copyWith(
         guideStrokes: guide,
+        shapeStrokes: shape.isEmpty ? guide : shape,
         targetStrokeIndex: 0,
-        glyphStrokeWidth: _craftedBodyWidth,
+        glyphStrokeWidth: body,
       ));
       return;
     }
@@ -395,11 +456,19 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
           ),
         ),
         textDirection: TextDirection.ltr,
-      )..layout(maxWidth: _res.toDouble());
-      tp.paint(
-        offCanvas,
-        Offset((_res - tp.width) / 2, (_res - tp.height) / 2),
+      )..layout();
+      if (tp.width <= 0 || tp.height <= 0) return 0;
+
+      // Same fit the painter uses (see DrawingCanvas._drawGuide). Without it,
+      // wide scripts overflow the mask and the letter you see does not match
+      // the area that accepts ink.
+      final scale = math.min(
+        _res * AppConstants.glyphFit / tp.width,
+        _res * AppConstants.glyphFit / tp.height,
       );
+      offCanvas.translate(_res / 2, _res / 2);
+      offCanvas.scale(scale);
+      tp.paint(offCanvas, Offset(-tp.width / 2, -tp.height / 2));
       final image = await recorder.endRecording().toImage(_res, _res);
       final byteData =
       await image.toByteData(format: ui.ImageByteFormat.rawRgba);
@@ -526,12 +595,18 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
           ),
         ),
         textDirection: TextDirection.ltr,
-      )..layout(maxWidth: _res.toDouble());
+      )..layout();
+      if (tp.width <= 0 || tp.height <= 0) return 0.05;
 
-      tp.paint(
-        offCanvas,
-        Offset((_res - tp.width) / 2, (_res - tp.height) / 2),
+      // Must match DrawingCanvas._drawGuide and _buildMask exactly, otherwise
+      // the child is graded against a letter drawn somewhere else.
+      final fitScale = math.min(
+        _res * AppConstants.glyphFit / tp.width,
+        _res * AppConstants.glyphFit / tp.height,
       );
+      offCanvas.translate(_res / 2, _res / 2);
+      offCanvas.scale(fitScale);
+      tp.paint(offCanvas, Offset(-tp.width / 2, -tp.height / 2));
 
       final picture = recorder.endRecording();
       final image = await picture.toImage(_res, _res);

@@ -258,8 +258,10 @@ class CharacterLocalDataSourceImpl implements CharacterLocalDataSource {
     final vowels = [
       ['അ', 'A', 'a'],  ['ആ', 'Aa', 'aa'], ['ഇ', 'I', 'i'],
       ['ഈ', 'Ii', 'ii'],['ഉ', 'U', 'u'],   ['ഊ', 'Uu', 'uu'],
+      ['ഋ', 'Ru', 'ru'],
       ['എ', 'E', 'e'],  ['ഏ', 'Ee', 'ee'], ['ഐ', 'Ai', 'ai'],
       ['ഒ', 'O', 'o'],  ['ഓ', 'Oo', 'oo'], ['ഔ', 'Au', 'au'],
+      ['അം', 'Am', 'am'],['അഃ', 'Ah', 'ah'],
     ];
     final consonants = [
       ['ക', 'Ka', 'ka'],  ['ഖ', 'Kha', 'kha'], ['ഗ', 'Ga', 'ga'],

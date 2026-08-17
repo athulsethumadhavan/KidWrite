@@ -38,9 +38,176 @@ class _TracingHandState extends State<TracingHand>
     return Duration(milliseconds: ms.round());
   }
 
+  /// Cumulative, curvature-weighted position of each point along the stroke,
+  /// normalized 0..1. Sharp turns are given extra weight so the hand eases
+  /// into them and out again instead of whipping round — a direction change
+  /// then reads as deliberate rather than as a glitch.
+  late List<double> _cum;
+
+  /// The stroke resampled into short, evenly spaced steps along a smooth
+  /// curve. Interpolating on this is what makes the hand glide: the raw path
+  /// is simplified, so lerping between its points shows visible corners, and
+  /// sampling a spline by its parameter moves at an uneven rate.
+  late List<Offset> _dense;
+
+  /// True where the path doubles back over ink it has already laid down — the
+  /// return up the stem of അ, for example. The letter really is written that
+  /// way, but showing it looks like the hand is drawing backwards, so the demo
+  /// crosses those stretches in almost no time: the hand jumps to where new
+  /// ink resumes.
+  late List<bool> _retrace;
+
+  void _markRetrace() {
+    final pts = _dense;
+    _retrace = List<bool>.filled(pts.length, false);
+    final near = widget.handSize * 0.16;
+    final nearSq = near * near;
+    // Skip enough neighbours that the samples just behind on the same run are
+    // never mistaken for a retrace of themselves.
+    final skip = (near / 2.0).ceil() + 2;
+    for (int i = 1; i < pts.length; i++) {
+      for (int j = 0; j < i - skip; j++) {
+        if ((pts[i] - pts[j]).distanceSquared < nearSq) {
+          _retrace[i] = true;
+          break;
+        }
+      }
+    }
+  }
+
+  void _densify() {
+    final raw = widget.stroke;
+    if (raw.length < 3) {
+      _dense = List<Offset>.of(raw);
+      return;
+    }
+    const step = 2.0; // logical pixels between samples
+    final out = <Offset>[raw.first];
+    for (int i = 1; i < raw.length; i++) {
+      final p0 = raw[i - 2 < 0 ? 0 : i - 2];
+      final p1 = raw[i - 1];
+      final p2 = raw[i];
+      final p3 = raw[i + 1 >= raw.length ? raw.length - 1 : i + 1];
+      final n = ((p2 - p1).distance / step).ceil().clamp(1, 60);
+      for (int k = 1; k <= n; k++) {
+        out.add(_spline(p0, p1, p2, p3, k / n));
+      }
+    }
+    _dense = out;
+  }
+
+  void _buildProfile() {
+    _densify();
+    _markRetrace();
+    final pts = _dense;
+    _cum = List<double>.filled(pts.length, 0);
+    if (pts.length < 2) return;
+
+    // Per-segment time weight.
+    final weights = List<double>.filled(pts.length, 1);
+    for (int i = 1; i < pts.length; i++) {
+      // How sharply does the path turn here? 0 = straight on, 1 = doubles back.
+      double sharpness = 0;
+      if (i > 1) {
+        final a = pts[i - 1] - pts[i - 2];
+        final b = pts[i] - pts[i - 1];
+        final na = a.distance, nb = b.distance;
+        if (na > 0.01 && nb > 0.01) {
+          final cos = ((a.dx * b.dx + a.dy * b.dy) / (na * nb)).clamp(-1.0, 1.0);
+          sharpness = (1 - cos) / 2;
+        }
+      }
+      // A hairpin costs ~4x the time of a straight run of the same length.
+      weights[i] = 1 + 3.0 * sharpness * sharpness;
+    }
+
+    // Blur the weights so speed ramps up and down instead of stepping between
+    // neighbouring segments — a sudden change of pace reads as a stutter.
+    // Samples are ~2px apart, so this ramps over roughly 40px of travel.
+    final smoothed = List<double>.filled(pts.length, 1);
+    const span = 20;
+    for (int i = 1; i < pts.length; i++) {
+      double sum = 0;
+      int n = 0;
+      for (int k = i - span; k <= i + span; k++) {
+        if (k < 1 || k >= pts.length) continue;
+        sum += weights[k];
+        n++;
+      }
+      smoothed[i] = n == 0 ? weights[i] : sum / n;
+    }
+
+    // Applied AFTER the blur so the crossing stays quick instead of being
+    // smeared out across it. Each retraced run is given a short, fixed budget
+    // rather than a flat weight, so a long retrace and a short one take about
+    // the same time; and the pace ramps in and out over a few samples, so the
+    // hand accelerates away and settles back rather than teleporting.
+    int i = 1;
+    while (i < pts.length) {
+      if (!_retrace[i]) {
+        i++;
+        continue;
+      }
+      int end = i;
+      double runLength = 0;
+      while (end < pts.length && _retrace[end]) {
+        runLength += (pts[end] - pts[end - 1]).distance;
+        end++;
+      }
+      if (runLength > 0.01) {
+        // Cross the whole run in the time a short forward hop would take.
+        const budget = 120.0;
+        // The floor matters: below about 0.08 the middle of the run is so fast
+        // that the ramp can't hide the change of pace, and the sweep snaps.
+        final fast = (budget / runLength).clamp(0.08, 0.6);
+        final count = end - i;
+        // Half the run spent easing in, half easing out — the longest ramp the
+        // run can afford, so the speed never steps.
+        final ramp = (count / 2).clamp(1, 8).toInt();
+        for (int k = i; k < end; k++) {
+          final into = (k - i + 1) / ramp;
+          final outOf = (end - k) / ramp;
+          // Smoothstep at both ends of the run.
+          final edge = into.clamp(0.0, 1.0) * outOf.clamp(0.0, 1.0);
+          final blend = edge * edge * (3 - 2 * edge);
+          smoothed[k] = smoothed[k] * (1 - blend) + fast * blend;
+        }
+      }
+      i = end;
+    }
+
+    double running = 0;
+    for (int i = 1; i < pts.length; i++) {
+      running += (pts[i] - pts[i - 1]).distance * smoothed[i];
+      _cum[i] = running;
+    }
+    if (running <= 0) return;
+    for (int i = 0; i < _cum.length; i++) {
+      _cum[i] /= running;
+    }
+  }
+
+  /// Catmull-Rom point, so the hand follows a curve through the path points
+  /// rather than cutting the corners of a polyline.
+  Offset _spline(Offset p0, Offset p1, Offset p2, Offset p3, double t) {
+    final t2 = t * t;
+    final t3 = t2 * t;
+    double axis(double a, double b, double c, double d) =>
+        0.5 *
+        ((2 * b) +
+            (-a + c) * t +
+            (2 * a - 5 * b + 4 * c - d) * t2 +
+            (-a + 3 * b - 3 * c + d) * t3);
+    return Offset(
+      axis(p0.dx, p1.dx, p2.dx, p3.dx),
+      axis(p0.dy, p1.dy, p2.dy, p3.dy),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
+    _buildProfile();
     _controller = AnimationController(
       vsync: this,
       duration: _durationFor(widget.stroke),
@@ -56,6 +223,7 @@ class _TracingHandState extends State<TracingHand>
   void didUpdateWidget(TracingHand old) {
     super.didUpdateWidget(old);
     if (!identical(old.stroke, widget.stroke)) {
+      _buildProfile();
       _controller
         ..duration = _durationFor(widget.stroke)
         ..reset()
@@ -69,30 +237,38 @@ class _TracingHandState extends State<TracingHand>
     super.dispose();
   }
 
-  /// Point at fraction [t] (0..1) along the stroke's arc length.
-  Offset _pointAt(double t) {
-    final pts = widget.stroke;
+  /// Point at fraction [t] (0..1) along the curvature-weighted profile, so the
+  /// hand slows through turns instead of moving at a constant speed.
+  Offset _sampleAt(double t) {
+    final pts = _dense;
     if (pts.isEmpty) return Offset.zero;
     if (pts.length == 1 || t <= 0) return pts.first;
+    if (_cum.length != pts.length) return pts.last;
 
-    double total = 0;
-    final lengths = <double>[];
+    final target = t.clamp(0.0, 1.0);
     for (int i = 1; i < pts.length; i++) {
-      final d = (pts[i] - pts[i - 1]).distance;
-      lengths.add(d);
-      total += d;
-    }
-    if (total == 0) return pts.first;
-
-    double target = total * t.clamp(0.0, 1.0);
-    for (int i = 0; i < lengths.length; i++) {
-      if (target <= lengths[i]) {
-        final f = lengths[i] == 0 ? 0.0 : target / lengths[i];
-        return Offset.lerp(pts[i], pts[i + 1], f)!;
+      if (target <= _cum[i]) {
+        final span = _cum[i] - _cum[i - 1];
+        final f = span <= 0 ? 0.0 : (target - _cum[i - 1]) / span;
+        return Offset.lerp(pts[i - 1], pts[i], f)!;
       }
-      target -= lengths[i];
     }
     return pts.last;
+  }
+
+  /// The demo loops, so without this the hand teleported from the end of the
+  /// letter straight back to the start — which reads as the hand jumping to
+  /// somewhere else instead of finishing. Fade out on arrival, stay hidden
+  /// through the pause, fade back in at the start of the next pass.
+  double _opacityFor(double c) {
+    const traceEnd = 0.75;   // matches the Interval below
+    const gone = 0.86;
+    const back = 0.97;
+    if (c < 0.05) return c / 0.05;                       // fading in
+    if (c <= traceEnd) return 1.0;                       // drawing
+    if (c < gone) return 1.0 - (c - traceEnd) / (gone - traceEnd);
+    if (c < back) return 0.0;                            // resting, hidden
+    return (c - back) / (1 - back);
   }
 
   @override
@@ -104,8 +280,11 @@ class _TracingHandState extends State<TracingHand>
         animation: _controller,
         builder: (context, _) {
           final t = _progress.value;
-          final pos = _pointAt(t);
+          final pos = _sampleAt(t);
           final hs = widget.handSize;
+          final opacity = _opacityFor(_controller.value);
+
+          if (opacity <= 0.01) return const SizedBox.shrink();
 
           return Stack(
             children: [
@@ -114,9 +293,12 @@ class _TracingHandState extends State<TracingHand>
               Positioned(
                 left: pos.dx - hs * 0.38,
                 top: pos.dy - hs * 0.04,
-                child: CustomPaint(
-                  size: Size(hs, hs * 1.1),
-                  painter: _PointingHandPainter(),
+                child: Opacity(
+                  opacity: opacity,
+                  child: CustomPaint(
+                    size: Size(hs, hs * 1.1),
+                    painter: _PointingHandPainter(),
+                  ),
                 ),
               ),
             ],
