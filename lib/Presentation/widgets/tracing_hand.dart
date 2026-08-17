@@ -65,10 +65,29 @@ class _TracingHandState extends State<TracingHand>
     // Skip enough neighbours that the samples just behind on the same run are
     // never mistaken for a retrace of themselves.
     final skip = (near / 2.0).ceil() + 2;
+
+    Offset dir(int k) {
+      final a = pts[k - 1 < 0 ? 0 : k - 1];
+      final b = pts[k + 1 >= pts.length ? pts.length - 1 : k + 1];
+      final d = b - a;
+      final n = d.distance;
+      return n < 0.001 ? Offset.zero : d / n;
+    }
+
     for (int i = 1; i < pts.length; i++) {
       for (int j = 0; j < i - skip; j++) {
         if ((pts[i] - pts[j]).distanceSquared < nearSq) {
-          _retrace[i] = true;
+          // Proximity alone is not enough: the closing arc of a loop (the
+          // circle of അ) and arcs that merely run close beside earlier ink
+          // would be flagged too, making the hand dart around inside small
+          // features. A genuine retrace travels back ALONG the earlier pass,
+          // so require the directions to be roughly opposite.
+          final di = dir(i);
+          final dj = dir(j);
+          final dot = di.dx * dj.dx + di.dy * dj.dy;
+          if (dot < -0.4) {
+            _retrace[i] = true;
+          }
           break;
         }
       }
@@ -154,7 +173,9 @@ class _TracingHandState extends State<TracingHand>
         runLength += (pts[end] - pts[end - 1]).distance;
         end++;
       }
-      if (runLength > 0.01) {
+      // Tiny retraced snippets (a few px at a loop seam) are crossed at
+      // normal pace — speeding through them is itself a visible dart.
+      if (runLength > 18.0) {
         // Cross the whole run in the time a short forward hop would take.
         const budget = 120.0;
         // The floor matters: below about 0.08 the middle of the run is so fast
