@@ -46,3 +46,4 @@ app.*.map.json
 
 # Claude session files
 .claude/
+/CLAUDE.md
