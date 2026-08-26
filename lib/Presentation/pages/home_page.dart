@@ -17,6 +17,7 @@ import '../blocs/home/home_bloc.dart';
 import '../blocs/music/music_bloc.dart';
 import '../widgets/language_card.dart';
 import '../widgets/music_toggle_button.dart';
+import '../widgets/scroll_under_header.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -218,12 +219,16 @@ class _HomeView extends StatelessWidget {
     return Scaffold(
       body: AnimatedBackground(
         primaryColor: AppColors.primary,
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 20, 20, 8),
+        // No SafeArea: the grid scrolls up *under* the header and the status
+        // bar, iOS-style. The header carries the top inset itself.
+        child: ScrollUnderHeader(
+          header: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  24,
+                  20 + MediaQuery.paddingOf(context).top,
+                  20,
+                  8,
+                ),
                 child: Row(
                   // Icons pin to the TOP so they sit beside the greeting
                   // line instead of floating next to the tall title.
@@ -301,31 +306,24 @@ class _HomeView extends StatelessWidget {
                   ],
                 ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.2),
               ),
-
-              const SizedBox(height: 16),
-
-              // Language grid
-              Expanded(
-                child: BlocBuilder<HomeBloc, HomeState>(
-                  builder: (context, state) {
-                    if (state is HomeLoading) {
-                      return const Center(
-                          child: CircularProgressIndicator());
-                    }
-                    if (state is HomeLoaded) {
-                      return _LanguageGrid(
-                        languages: state.languages,
-                        isTablet: isTablet,
-                      );
-                    }
-                    if (state is HomeError) {
-                      return Center(child: Text(state.message));
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ),
-            ],
+          builder: (context, topInset) =>
+              BlocBuilder<HomeBloc, HomeState>(
+            builder: (context, state) {
+              if (state is HomeLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (state is HomeLoaded) {
+                return _LanguageGrid(
+                  languages: state.languages,
+                  isTablet: isTablet,
+                  topInset: topInset + 16,
+                );
+              }
+              if (state is HomeError) {
+                return Center(child: Text(state.message));
+              }
+              return const SizedBox.shrink();
+            },
           ),
         ),
       ),
@@ -388,14 +386,23 @@ class _LanguageGrid extends StatelessWidget {
   final List<Language> languages;
   final bool isTablet;
 
-  const _LanguageGrid({required this.languages, required this.isTablet});
+  /// Clears the floating header. Without it the first row would start out
+  /// hidden behind the bar.
+  final double topInset;
+
+  const _LanguageGrid({
+    required this.languages,
+    required this.isTablet,
+    required this.topInset,
+  });
 
   @override
   Widget build(BuildContext context) {
     final crossAxisCount = isTablet ? 3 : 2;
 
     return GridView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      // No bottom padding — the grid runs to the edge of the screen.
+      padding: EdgeInsets.fromLTRB(20, topInset, 20, 0),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
         crossAxisSpacing: 16,

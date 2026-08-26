@@ -15,6 +15,7 @@ import '../../domain/usecases/get_characters.dart';
 import '../../injection_container.dart';
 import '../blocs/progress/progress_bloc.dart';
 import '../widgets/music_toggle_button.dart';
+import '../widgets/scroll_under_header.dart';
 import '../blocs/music/music_bloc.dart';
 
 class CharacterListPage extends StatefulWidget {
@@ -28,7 +29,6 @@ class CharacterListPage extends StatefulWidget {
 class _CharacterListPageState extends State<CharacterListPage> {
   List<Character> _characters = [];
   bool _loading = true;
-  String? _selectedCategory;
   late final ProgressBloc _progressBloc;
 
   @override
@@ -46,24 +46,10 @@ class _CharacterListPageState extends State<CharacterListPage> {
   }
 
   Future<void> _loadCharacters() async {
-    // Load the full set; category filtering happens locally so the filter
-    // chips stay visible after a category is selected.
     final chars = await sl<GetCharacters>()(
       GetCharactersParams(languageId: widget.languageId),
     );
     if (mounted) setState(() { _characters = chars; _loading = false; });
-  }
-
-  List<Character> get _visibleCharacters => _selectedCategory == null
-      ? _characters
-      : _characters
-      .where((c) => c.category.name == _selectedCategory)
-      .toList();
-
-  List<String> get _categories {
-    final cats = _characters.map((c) => c.category.name).toSet().toList();
-    cats.sort();
-    return cats;
   }
 
   Color get _langColor =>
@@ -78,13 +64,21 @@ class _CharacterListPageState extends State<CharacterListPage> {
       child: Scaffold(
         body: AnimatedBackground(
           primaryColor: _langColor,
-          child: SafeArea(
-            child: Column(
+          // No SafeArea: the level map slides up *under* the title bar and
+          // the status bar. The header carries the top inset itself.
+          child: ScrollUnderHeader(
+            header: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 // App bar row
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
+                  padding: EdgeInsets.fromLTRB(
+                    8,
+                    8 + MediaQuery.paddingOf(context).top,
+                    16,
+                    0,
+                  ),
                   child: Row(
                     children: [
                       IconButton(
@@ -110,22 +104,10 @@ class _CharacterListPageState extends State<CharacterListPage> {
                   ),
                 ),
 
-                // Category filter chips
-                if (!_loading && _categories.length > 1)
-                  _CategoryFilter(
-                    categories: _categories,
-                    selected: _selectedCategory,
-                    accentColor: _langColor,
-                    onSelect: (cat) {
-                      setState(() => _selectedCategory = cat);
-                    },
-                  ),
-
                 const SizedBox(height: 8),
-
-                // Level map — winding path of letter "stages"
-                Expanded(
-                  child: _loading
+              ],
+            ),
+            builder: (context, topInset) => _loading
                       ? const Center(child: CircularProgressIndicator())
                       : BlocBuilder<ProgressBloc, ProgressState>(
                     builder: (context, progressState) {
@@ -156,11 +138,12 @@ class _CharacterListPageState extends State<CharacterListPage> {
                       }
 
                       return _LevelPathMap(
-                        characters: _visibleCharacters,
+                        characters: _characters,
                         progressMap: progressMap,
                         unlockedIds: unlockedIds,
                         accentColor: _langColor,
                         languageId: widget.languageId,
+                        topInset: topInset,
                         onTap: (char) {
                           context
                               .push(
@@ -178,9 +161,6 @@ class _CharacterListPageState extends State<CharacterListPage> {
                       );
                     },
                   ),
-                ),
-              ],
-            ),
           ),
         ),
       ),
@@ -212,6 +192,10 @@ class _LevelPathMap extends StatelessWidget {
   final Set<String> unlockedIds;
   final Color accentColor;
   final String languageId;
+
+  /// Clears the floating title bar, so the first bubble starts below it and
+  /// then slides underneath as the map scrolls.
+  final double topInset;
   final void Function(Character) onTap;
 
   const _LevelPathMap({
@@ -220,13 +204,13 @@ class _LevelPathMap extends StatelessWidget {
     required this.unlockedIds,
     required this.accentColor,
     required this.languageId,
+    required this.topInset,
     required this.onTap,
   });
 
   static const double _spacingY = 128;
   static const double _nodeSize = 92;
   static const double _topPad = 52; // room for the star row of node 1
-  static const double _bottomPad = 40;
 
   /// Serpentine x-position (fraction of width) at wave position [t]
   /// (t = node index, but continuous values sample the same sine wave —
@@ -238,8 +222,10 @@ class _LevelPathMap extends StatelessWidget {
     if (characters.isEmpty) {
       return const Center(child: Text('No letters here yet!'));
     }
+    // No bottom padding — the map ends with the last bubble.
+    final top = topInset + _topPad;
     final mapHeight =
-        _topPad + (characters.length - 1) * _spacingY + _bottomPad + _nodeSize;
+        top + (characters.length - 1) * _spacingY + _nodeSize;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -252,7 +238,7 @@ class _LevelPathMap extends StatelessWidget {
           for (int i = 0; i < characters.length; i++)
             Offset(
               xOffset + _xFrac(i) * pathWidth,
-              _topPad + _nodeSize / 2 + i * _spacingY,
+              top + _nodeSize / 2 + i * _spacingY,
             ),
         ];
 
@@ -554,107 +540,6 @@ class _LevelNode extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CategoryFilter extends StatelessWidget {
-  final List<String> categories;
-  final String? selected;
-  final Color accentColor;
-  final void Function(String?) onSelect;
-
-  const _CategoryFilter({
-    required this.categories,
-    required this.selected,
-    required this.accentColor,
-    required this.onSelect,
-  });
-
-  String _label(String cat) {
-    const labels = {
-      'vowel': 'Vowels',
-      'consonant': 'Consonants',
-      'uppercase': 'UPPER',
-      'lowercase': 'lower',
-      'number': 'Numbers',
-    };
-    return labels[cat] ?? cat;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          // "All" chip
-          _Chip(
-            label: 'All',
-            selected: selected == null,
-            color: accentColor,
-            onTap: () => onSelect(null),
-          ),
-          ...categories.map(
-                (cat) => _Chip(
-              label: _label(cat),
-              selected: selected == cat,
-              color: accentColor,
-              onTap: () => onSelect(cat == selected ? null : cat),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Chip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _Chip({
-    required this.label,
-    required this.selected,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          decoration: BoxDecoration(
-            color: selected ? color : color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(50),
-            boxShadow: selected
-                ? [
-              BoxShadow(
-                color: color.withValues(alpha: 0.4),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              )
-            ]
-                : [],
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: selected ? Colors.white : color,
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
-            ),
-          ),
         ),
       ),
     );
