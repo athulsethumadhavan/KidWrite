@@ -1,12 +1,10 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 /// Lays a scrollable out *behind* a floating header, iOS navigation-bar style.
 ///
 /// The list starts below the header, then slides up under it as you scroll:
 /// the top of the content dissolves into the bar rather than being clipped at
-/// a hard edge, and the bar itself blurs whatever passes beneath it.
+/// a hard edge.
 ///
 /// The header's height is measured on the first frame, so the content's top
 /// inset always matches it — no magic numbers to keep in sync with the header
@@ -97,20 +95,15 @@ class _ScrollUnderHeaderState extends State<ScrollUnderHeader> {
             child: widget.builder(context, _headerHeight),
           ),
         ),
+        // The bar itself. Deliberately NOT a BackdropFilter: clipping a blur
+        // to the header's box leaves a hard tonal seam along its bottom edge,
+        // visible against the animated background even before you scroll.
+        // The content fade above already does the hiding.
         Positioned(
           top: 0,
           left: 0,
           right: 0,
-          child: ClipRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-              child: Container(
-                key: _headerKey,
-                color: Colors.transparent,
-                child: widget.header,
-              ),
-            ),
-          ),
+          child: KeyedSubtree(key: _headerKey, child: widget.header),
         ),
       ],
     );

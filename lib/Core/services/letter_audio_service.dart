@@ -33,6 +33,41 @@ class LetterAudioService {
     await _speakFallback(character);
   }
 
+  /// Says the reward word — "A for Apple", "അമ്മ".
+  ///
+  /// Same two-tier approach as [playLetter]: a recorded clip at
+  /// assets/audio/words/<character.id>.mp3 if one exists, otherwise TTS.
+  ///
+  /// [roman] is the romanised spelling ('amma'). It matters because iOS ships
+  /// no Malayalam voice at all and Android only has one if the user installed
+  /// it — and asking flutter_tts for a language the device doesn't have leaves
+  /// speak() silent rather than failing. So the locale is checked first, and
+  /// the roman spelling is read in English when the real one is missing.
+  Future<void> playWord(
+    Character character,
+    String spoken, {
+    String? roman,
+  }) async {
+    final assetPath = 'audio/words/${character.id}.mp3';
+
+    if (await _assetExists(assetPath)) {
+      try {
+        await _player.stop();
+        await _player.play(AssetSource(assetPath), volume: 1.0);
+        return;
+      } catch (_) {
+        // fall through to TTS
+      }
+    }
+
+    await _prepareTts();
+    await _speakBestEffort(
+      locale: _localeFor(character.languageId),
+      text: spoken,
+      fallbackText: roman,
+    );
+  }
+
   Future<void> stop() async {
     await _player.stop();
     await _tts.stop();
@@ -52,15 +87,52 @@ class LetterAudioService {
     }
   }
 
-  Future<void> _speakFallback(Character character) async {
-    if (!_ttsReady) {
-      await _tts.setVolume(1.0);
-      await _tts.setSpeechRate(0.45);
-      await _tts.setPitch(1.1);
-      _ttsReady = true;
+  Future<void> _prepareTts() async {
+    if (_ttsReady) return;
+    await _tts.setVolume(1.0);
+    await _tts.setSpeechRate(0.45);
+    await _tts.setPitch(1.1);
+    _ttsReady = true;
+  }
+
+  /// Whether the device can actually speak [locale]. Cached — the platform
+  /// call is not free and the answer can't change while the app is running.
+  final Map<String, bool> _localeSupport = {};
+
+  Future<bool> _canSpeak(String locale) async {
+    final cached = _localeSupport[locale];
+    if (cached != null) return cached;
+    bool ok;
+    try {
+      ok = await _tts.isLanguageAvailable(locale) == true;
+    } catch (_) {
+      ok = false;
     }
-    await _tts.setLanguage(_localeFor(character.languageId));
+    _localeSupport[locale] = ok;
+    return ok;
+  }
+
+  /// Speaks [text] in [locale] if the device has that voice, otherwise reads
+  /// [fallbackText] in English. Without this a device with no Malayalam voice
+  /// simply stays silent.
+  Future<void> _speakBestEffort({
+    required String locale,
+    required String text,
+    String? fallbackText,
+  }) async {
     await _tts.stop();
+    if (await _canSpeak(locale)) {
+      await _tts.setLanguage(locale);
+      await _tts.speak(text);
+      return;
+    }
+    if (fallbackText == null || fallbackText.isEmpty) return;
+    await _tts.setLanguage('en-US');
+    await _tts.speak(fallbackText);
+  }
+
+  Future<void> _speakFallback(Character character) async {
+    await _prepareTts();
     // English/numbers: speak the pronunciation word ("ay", "bee", "five") —
     // speaking the raw symbol makes some TTS engines announce the case
     // ("capital A"). Other scripts: speak the symbol in its locale.
@@ -71,10 +143,14 @@ class LetterAudioService {
       'shapes',
       'lines',
     };
-    final text = spellOutName.contains(character.languageId)
-        ? character.pronunciation
-        : character.symbol;
-    await _tts.speak(text);
+    final spellOut = spellOutName.contains(character.languageId);
+    await _speakBestEffort(
+      locale: _localeFor(character.languageId),
+      text: spellOut ? character.pronunciation : character.symbol,
+      // No Malayalam voice on this device → read the romanised name
+      // ('a', 'aa', 'ka') rather than saying nothing.
+      fallbackText: character.pronunciation,
+    );
   }
 
   static String _localeFor(String languageId) {

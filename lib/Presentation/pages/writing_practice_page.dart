@@ -10,6 +10,7 @@ import 'package:kid_write/Core/services/letter_audio_service.dart';
 import 'package:kid_write/Core/services/review_prompt_service.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/data/letter_words.dart';
 import '../../core/utils/responsive_helper.dart';
 import '../../core/widgets/animated_background.dart';
 import '../../domain/entities/character.dart';
@@ -19,6 +20,7 @@ import '../blocs/music/music_bloc.dart';
 import '../blocs/progress/progress_bloc.dart';
 import '../blocs/writing/writing_bloc.dart';
 import '../widgets/drawing_canvas.dart';
+import '../widgets/letter_reward_card.dart';
 import '../widgets/music_toggle_button.dart';
 
 class WritingPracticePage extends StatefulWidget {
@@ -49,6 +51,13 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
   Offset _flyTo = Offset.zero;
   Timer? _redrawTimer;
 
+  // Picture-word reward ("A for Apple"). Non-null while the card is up.
+  LetterWord? _reward;
+  Timer? _rewardTimer;
+
+  /// Deferred until the card closes, so the canvas doesn't reset behind it.
+  VoidCallback? _afterReward;
+
   @override
   void initState() {
     super.initState();
@@ -70,6 +79,7 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
   @override
   void dispose() {
     _redrawTimer?.cancel();
+    _rewardTimer?.cancel();
     _confetti.dispose();
     _writingBloc.close();
     _progressBloc.close();
@@ -113,10 +123,71 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
   Future<void> _maybeAskForReview() async {
     final due = await ReviewPromptService.registerLevelCompleted();
     if (!due || !mounted) return;
-    // Let the confetti and the letter sound finish first.
-    await Future.delayed(const Duration(milliseconds: 2600));
-    if (!mounted) return;
+    // Let the confetti, the reward card and the spoken word finish first.
+    await Future.delayed(const Duration(milliseconds: 4400));
+    if (!mounted || _reward != null) return;
     await ReviewPromptService.show(context);
+  }
+
+  /// Shows the picture-word card, says the word, and runs [then] once the
+  /// card goes away — either on tap or when it times out.
+  void _showReward(LetterWord word, {required VoidCallback then}) {
+    _afterReward = then;
+    setState(() => _reward = word);
+
+    // Slightly behind the card so the picture is on screen before the voice.
+    Future.delayed(const Duration(milliseconds: 450), () {
+      if (!mounted || _reward == null) return;
+      sl<LetterAudioService>().playWord(
+        widget.character,
+        word.spoken,
+        roman: word.roman,
+      );
+    });
+
+    _rewardTimer?.cancel();
+    _rewardTimer = Timer(const Duration(milliseconds: 3000), _dismissReward);
+  }
+
+  void _dismissReward() {
+    _rewardTimer?.cancel();
+    if (!mounted || _reward == null) return;
+    setState(() => _reward = null);
+    final after = _afterReward;
+    _afterReward = null;
+    after?.call();
+  }
+
+  /// The speaker button: show the picture and say the word, exactly like
+  /// finishing the letter does. Falls back to the plain letter sound for
+  /// scripts with no word list.
+  void _speakAloud() {
+    final word = LetterWords.of(widget.character);
+    if (word == null) {
+      sl<LetterAudioService>().playLetter(widget.character);
+      return;
+    }
+    if (_reward != null) {
+      // Card is already up mid-celebration — just say it again rather than
+      // restarting it, so whatever is queued behind it isn't dropped.
+      sl<LetterAudioService>()
+          .playWord(widget.character, word.spoken, roman: word.roman);
+      return;
+    }
+    _showReward(word, then: () {});
+  }
+
+  /// Indic scripts need their own font for the letter on the card.
+  static String? _fontFamilyFor(String languageId) {
+    const map = {
+      'malayalam': 'NotoSansMalayalam',
+      'hindi': 'NotoSansDevanagari',
+      'tamil': 'NotoSansTamil',
+      'english_upper': 'Andika',
+      'english_lower': 'Andika',
+      'numbers': 'Andika',
+    };
+    return map[languageId];
   }
 
   Color get _langColor =>
@@ -147,6 +218,7 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
                     langColor: _langColor,
                     starKeys: _starKeys,
                     hiddenStar: _showFlyStar ? _flyTargetIndex : null,
+                    onSpeak: _speakAloud,
                   )
                       : _PhoneLayout(
                     character: widget.character,
@@ -154,6 +226,7 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
                     langColor: _langColor,
                     starKeys: _starKeys,
                     hiddenStar: _showFlyStar ? _flyTargetIndex : null,
+                    onSpeak: _speakAloud,
                   ),
 
                   // Big star flying up into the star row.
@@ -186,6 +259,16 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
                       shouldLoop: false,
                     ),
                   ),
+
+                  // "A for Apple" / "അ … അമ്മ"
+                  if (_reward != null)
+                    LetterRewardCard(
+                      character: widget.character,
+                      entry: _reward!,
+                      accentColor: _langColor,
+                      fontFamily: _fontFamilyFor(widget.languageId),
+                      onDismiss: _dismissReward,
+                    ),
                 ],
               ),
             ),
@@ -212,35 +295,51 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
 
       _launchStarFly(prior.clamp(0, 2).toInt());
 
-      if (prior + 1 >= 3) {
+      final starsNow = prior + 1;
+      // English, numbers and Malayalam have a picture-word; the rest keep
+      // the plain celebration.
+      final reward = LetterWords.of(widget.character);
+
+      if (starsNow >= 3) {
         // Third star: level complete — full celebration.
         _confetti.play();
         sl<MusicBloc>().add(const MusicPlaySuccess());
         Future.delayed(const Duration(milliseconds: 1200), () {
           if (!mounted) return;
-          sl<LetterAudioService>().playLetter(widget.character);
+          // With a reward card the word is spoken instead, so the two
+          // voices never talk over each other.
+          if (reward == null) sl<LetterAudioService>().playLetter(widget.character);
         });
 
         // Count the level and, every few levels, ask for a review —
         // after the celebration so we never interrupt the fun.
-        if (prior + 1 == 3) _maybeAskForReview();
+        if (starsNow == 3) _maybeAskForReview();
       } else {
         // Star 1 or 2: pop sound, then set up the next attempt.
         sl<MusicBloc>().add(const MusicPlayTap());
-        final starsNow = prior + 1;
+      }
+
+      // Whatever has to happen next, it waits until the card is gone —
+      // otherwise the canvas resets behind it.
+      void nextAttempt() {
+        if (!mounted || starsNow >= 3) return;
+        if (starsNow >= 2) {
+          // Two stars done → the 3rd attempt is free-draw: reload the
+          // character so the hand and dots switch off right away.
+          _writingBloc.add(
+            WritingLoadCharacter(widget.character, freeDraw: true),
+          );
+        } else {
+          _writingBloc.add(const WritingClear());
+        }
+      }
+
+      if (reward != null) {
+        _showReward(reward, then: nextAttempt);
+      } else if (starsNow < 3) {
         _redrawTimer?.cancel();
-        _redrawTimer = Timer(const Duration(milliseconds: 1700), () {
-          if (!mounted) return;
-          if (starsNow >= 2) {
-            // Two stars done → the 3rd attempt is free-draw: reload the
-            // character so the hand and dots switch off right away.
-            _writingBloc.add(
-              WritingLoadCharacter(widget.character, freeDraw: true),
-            );
-          } else {
-            _writingBloc.add(const WritingClear());
-          }
-        });
+        _redrawTimer =
+            Timer(const Duration(milliseconds: 1700), nextAttempt);
       }
     } else if (state.status == WritingStatus.failure) {
       _progressBloc.add(ProgressRecord(
@@ -264,12 +363,16 @@ class _PhoneLayout extends StatelessWidget {
   final List<GlobalKey> starKeys;
   final int? hiddenStar;
 
+  /// Speaker button — shows the picture-word card and says it.
+  final VoidCallback onSpeak;
+
   const _PhoneLayout({
     required this.character,
     required this.languageId,
     required this.langColor,
     required this.starKeys,
     required this.hiddenStar,
+    required this.onSpeak,
   });
 
   @override
@@ -282,7 +385,8 @@ class _PhoneLayout extends StatelessWidget {
             character: character,
             langColor: langColor,
             starKeys: starKeys,
-            hiddenStar: hiddenStar),
+            hiddenStar: hiddenStar,
+            onSpeak: onSpeak),
         const SizedBox(height: 16),
         Expanded(
           child: Center(
@@ -308,12 +412,16 @@ class _TabletLayout extends StatelessWidget {
   final List<GlobalKey> starKeys;
   final int? hiddenStar;
 
+  /// Speaker button — shows the picture-word card and says it.
+  final VoidCallback onSpeak;
+
   const _TabletLayout({
     required this.character,
     required this.languageId,
     required this.langColor,
     required this.starKeys,
     required this.hiddenStar,
+    required this.onSpeak,
   });
 
   @override
@@ -337,7 +445,8 @@ class _TabletLayout extends StatelessWidget {
                           character: character,
                           langColor: langColor,
                           starKeys: starKeys,
-                          hiddenStar: hiddenStar),
+                          hiddenStar: hiddenStar,
+                          onSpeak: onSpeak),
                       const SizedBox(height: 32),
                       _BottomControls(langColor: langColor, character: character),
                     ],
@@ -404,11 +513,13 @@ class _CharacterInfo extends StatelessWidget {
   final Color langColor;
   final List<GlobalKey> starKeys;
   final int? hiddenStar; // slot kept unfilled while its star is flying in
+  final VoidCallback onSpeak;
   const _CharacterInfo({
     required this.character,
     required this.langColor,
     required this.starKeys,
     required this.hiddenStar,
+    required this.onSpeak,
   });
 
   @override
@@ -441,10 +552,9 @@ class _CharacterInfo extends StatelessWidget {
                 ],
               ),
               const SizedBox(width: 12),
-              // Speaker — says the letter sound aloud.
+              // Speaker — shows the picture and says the word.
               GestureDetector(
-                onTap: () =>
-                    sl<LetterAudioService>().playLetter(character),
+                onTap: onSpeak,
                 child: Container(
                   width: 44,
                   height: 44,
