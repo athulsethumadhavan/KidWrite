@@ -80,6 +80,10 @@ flutter:
     - assets/audio/
     - assets/animations/
     - assets/audio/letters/
+    # Optional overrides for the "A for Apple" reward card — see the READMEs
+    # in each folder. Empty is fine: emoji and live TTS are used instead.
+    - assets/words/
+    - assets/audio/words/
 
   fonts:
     # Andika (SIL) — literacy font with school-style print letterforms

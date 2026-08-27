@@ -170,7 +170,7 @@ class CharacterLocalDataSourceImpl implements CharacterLocalDataSource {
   // ---------------------------------------------------------------------------
   List<CharacterModel> _englishCharacters() {
     final uppercaseData = [
-      ['A', 'Letter A', 'ey'],  ['B', 'Letter B', 'bee'],
+      ['A', 'Letter A', 'ay'],  ['B', 'Letter B', 'bee'],
       ['C', 'Letter C', 'see'], ['D', 'Letter D', 'dee'],
       ['E', 'Letter E', 'ee'],  ['F', 'Letter F', 'ef'],
       ['G', 'Letter G', 'jee'], ['H', 'Letter H', 'aych'],
@@ -185,7 +185,7 @@ class CharacterLocalDataSourceImpl implements CharacterLocalDataSource {
       ['Y', 'Letter Y', 'why'], ['Z', 'Letter Z', 'zee'],
     ];
     final lowercaseData = [
-      ['a', 'Small a', 'ey'],  ['b', 'Small b', 'bee'],
+      ['a', 'Small a', 'ay'],  ['b', 'Small b', 'bee'],
       ['c', 'Small c', 'see'], ['d', 'Small d', 'dee'],
       ['e', 'Small e', 'ee'],  ['f', 'Small f', 'ef'],
       ['g', 'Small g', 'jee'], ['h', 'Small h', 'aych'],
