@@ -32,8 +32,17 @@ class LetterWord {
 class LetterWords {
   const LetterWords._();
 
+  /// File-safe name for this character's optional artwork and voice clip.
+  ///
+  /// The raw ids can't be used as filenames: capital and small English share
+  /// the `en_lower_` prefix and differ only in the letter's case, so
+  /// `en_lower_A` and `en_lower_a` are the *same file* on macOS and Windows —
+  /// one silently overwrites the other. Capitals get their own prefix.
+  static String fileStem(Character c) =>
+      c.languageId == 'english_upper' ? 'en_upper_${c.symbol}' : c.id;
+
   /// Artwork that overrides [LetterWord.emoji] when the file exists.
-  static String assetFor(Character c) => 'assets/words/${c.id}.png';
+  static String assetFor(Character c) => 'assets/words/${fileStem(c)}.png';
 
   /// Null for scripts with no word list (shapes, lines, Hindi, Tamil) — the
   /// caller then keeps the plain celebration.
@@ -107,20 +116,35 @@ class LetterWords {
 
   // ---------------------------------------------------------------------------
   // Numbers — the picture *is* the count, so the child can check it by eye.
+  // A different thing each time, so counting is the point rather than the
+  // apple: "one cat", "two apples", "eight snails".
   // ---------------------------------------------------------------------------
 
-  static const List<String> _numberNames = [
-    'zero', 'one', 'two', 'three', 'four',
-    'five', 'six', 'seven', 'eight', 'nine',
+  /// number word, what is being counted (already plural where it should be),
+  /// one of the things.
+  static const List<List<String>> _numberItems = [
+    ['zero', '', '🧺'],          // an empty basket — nothing to count
+    ['one', 'cat', '🐱'],
+    ['two', 'apples', '🍎'],
+    ['three', 'balloons', '🎈'],
+    ['four', 'fish', '🐟'],
+    ['five', 'oranges', '🍊'],
+    ['six', 'flowers', '🌸'],
+    ['seven', 'stars', '⭐'],
+    ['eight', 'snails', '🐌'],
+    ['nine', 'leaves', '🍃'],
   ];
 
   static final Map<String, LetterWord> _numbers = {
     for (int n = 0; n <= 9; n++)
       '$n': LetterWord(
-        word: _numberNames[n],
-        // Zero gets an empty basket rather than nothing at all.
-        emoji: n == 0 ? '🧺' : '🍎' * n,
-        spoken: _numberNames[n],
+        word: _numberItems[n][1].isEmpty
+            ? _numberItems[n][0]
+            : '${_numberItems[n][0]} ${_numberItems[n][1]}',
+        emoji: _numberItems[n][2] * (n == 0 ? 1 : n),
+        spoken: _numberItems[n][1].isEmpty
+            ? _numberItems[n][0]
+            : '${_numberItems[n][0]} ${_numberItems[n][1]}',
       ),
   };
 
@@ -194,8 +218,16 @@ class LetterWords {
         word: e[1],
         roman: e[2],
         emoji: e[3],
-        // Spoken in ml-IN, so the word alone is what a Malayali would say.
-        spoken: e[1],
+        // Letter first, then the word — "അ അമ്മ", the way it is taught. The
+        // comma is a pause: without it a bare vowel runs straight into the
+        // word and the two blur together.
+        spoken: '${e[0]}, ${e[1]}',
       ),
   };
+
+  /// What to read out when the device has no voice for the script — iOS has
+  /// no Malayalam one at all. Mirrors [LetterWord.spoken] in roman letters:
+  /// the letter's sound, then the word. "a amma", "aa aana".
+  static String? romanSpoken(Character c, LetterWord w) =>
+      w.roman == null ? null : '${c.pronunciation} ${w.roman}';
 }

@@ -10,7 +10,7 @@ import 'package:kid_write/Core/services/letter_audio_service.dart';
 import 'package:kid_write/Core/services/review_prompt_service.dart';
 
 import '../../core/constants/app_colors.dart';
-import '../../core/data/letter_words.dart';
+import 'package:kid_write/Core/data/letter_words.dart';
 import '../../core/utils/responsive_helper.dart';
 import '../../core/widgets/animated_background.dart';
 import '../../domain/entities/character.dart';
@@ -22,6 +22,20 @@ import '../blocs/writing/writing_bloc.dart';
 import '../widgets/drawing_canvas.dart';
 import '../widgets/letter_reward_card.dart';
 import '../widgets/music_toggle_button.dart';
+
+/// Indic scripts need their own font; English and numbers use the school
+/// print face. Null means "whatever the theme says".
+String? fontFamilyFor(String languageId) {
+  const map = {
+    'malayalam': 'NotoSansMalayalam',
+    'hindi': 'NotoSansDevanagari',
+    'tamil': 'NotoSansTamil',
+    'english_upper': 'Andika',
+    'english_lower': 'Andika',
+    'numbers': 'Andika',
+  };
+  return map[languageId];
+}
 
 class WritingPracticePage extends StatefulWidget {
   final String languageId;
@@ -141,7 +155,7 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
       sl<LetterAudioService>().playWord(
         widget.character,
         word.spoken,
-        roman: word.roman,
+        roman: LetterWords.romanSpoken(widget.character, word),
       );
     });
 
@@ -170,24 +184,14 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
     if (_reward != null) {
       // Card is already up mid-celebration — just say it again rather than
       // restarting it, so whatever is queued behind it isn't dropped.
-      sl<LetterAudioService>()
-          .playWord(widget.character, word.spoken, roman: word.roman);
+      sl<LetterAudioService>().playWord(
+        widget.character,
+        word.spoken,
+        roman: LetterWords.romanSpoken(widget.character, word),
+      );
       return;
     }
     _showReward(word, then: () {});
-  }
-
-  /// Indic scripts need their own font for the letter on the card.
-  static String? _fontFamilyFor(String languageId) {
-    const map = {
-      'malayalam': 'NotoSansMalayalam',
-      'hindi': 'NotoSansDevanagari',
-      'tamil': 'NotoSansTamil',
-      'english_upper': 'Andika',
-      'english_lower': 'Andika',
-      'numbers': 'Andika',
-    };
-    return map[languageId];
   }
 
   Color get _langColor =>
@@ -266,7 +270,7 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
                       character: widget.character,
                       entry: _reward!,
                       accentColor: _langColor,
-                      fontFamily: _fontFamilyFor(widget.languageId),
+                      fontFamily: fontFamilyFor(widget.languageId),
                       onDismiss: _dismissReward,
                     ),
                 ],
@@ -527,20 +531,30 @@ class _CharacterInfo extends StatelessWidget {
     final theme = Theme.of(context);
     return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          decoration: BoxDecoration(
-            color: langColor.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
+        // The whole pill is the speaker button — letter, sound and icon —
+        // so a small child doesn't have to hit the little round target.
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onSpeak,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: langColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Column(
                 children: [
+                  // The letter being drawn — not its English name, so the
+                  // child sees the same shape they are tracing.
                   Text(
-                    character.name,
-                    style: theme.textTheme.titleLarge,
+                    character.symbol,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontFamily: fontFamilyFor(character.languageId),
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   Text(
                     '"${character.pronunciation}"',
@@ -552,24 +566,22 @@ class _CharacterInfo extends StatelessWidget {
                 ],
               ),
               const SizedBox(width: 12),
-              // Speaker — shows the picture and says the word.
-              GestureDetector(
-                onTap: onSpeak,
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: langColor.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.volume_up_rounded,
-                    color: langColor,
-                    size: 26,
-                  ),
+              // Just the affordance now — the tap is handled by the pill.
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: langColor.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.volume_up_rounded,
+                  color: langColor,
+                  size: 26,
                 ),
               ),
-            ],
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 10),

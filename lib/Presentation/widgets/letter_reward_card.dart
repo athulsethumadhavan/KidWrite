@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../core/constants/app_colors.dart';
-import '../../core/data/letter_words.dart';
+import 'package:kid_write/Core/data/letter_words.dart';
 import '../../domain/entities/character.dart';
 
 /// The reward a child sees the moment a letter is finished: the letter, a

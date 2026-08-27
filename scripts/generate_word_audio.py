@@ -4,7 +4,9 @@ KidWrite — Reward-word audio generator
 Makes the "A for Apple" / "അമ്മ" clips the reward card plays.
 
     pip install gtts
-    python scripts/generate_word_audio.py
+    python scripts/generate_word_audio.py            # only what is missing
+    python scripts/generate_word_audio.py --force    # redo everything
+    python scripts/generate_word_audio.py --slow     # slower, clearer voice
 
 Writes assets/audio/words/<character id>.mp3. The app prefers these files and
 only falls back to the device's text-to-speech voice when one is missing —
@@ -36,6 +38,11 @@ CHARS_DART = os.path.join(
 OUT = os.path.join(ROOT, 'assets', 'audio', 'words')
 os.makedirs(OUT, exist_ok=True)
 
+FORCE = '--force' in sys.argv
+# gTTS's slow mode is a lot easier to follow for a child, at the cost of
+# sounding drawn out. Off by default; try it if a word is hard to make out.
+SLOW = '--slow' in sys.argv
+
 
 def read(path):
     with open(path, encoding='utf-8') as fh:
@@ -58,8 +65,9 @@ malayalam = re.findall(
     r"\['([^']+)', '([^']+)', '([^']+)', '[^']+'\]",
     block(words_src, '_ml = ['))
 
-number_names = re.findall(
-    r"'([a-z]+)'", block(words_src, '_numberNames = ['))
+numbers = re.findall(
+    r"\['([a-z]+)', '([a-z]*)', '[^']+'\]",
+    block(words_src, '_numberItems = ['))
 
 # ── ids: the Malayalam symbol order decides ml_vowel_N / ml_cons_N ───────────
 chars_src = read(CHARS_DART)
@@ -80,14 +88,16 @@ for i, sym in enumerate(ml_cons):
 jobs = []  # (id, text, lang)
 
 for sym, word in english:
-    # NOTE: uppercase ids really do use the en_lower_ prefix — see
-    # character_local_datasource.dart.
-    jobs.append((f'en_lower_{sym}', f'{sym} for {word}', 'en'))
+    # Capitals get their own prefix on purpose: the character ids put both
+    # cases under en_lower_, and en_lower_A / en_lower_a are the same file on
+    # macOS and Windows. Matches LetterWords.fileStem in the app.
+    jobs.append((f'en_upper_{sym}', f'{sym} for {word}', 'en'))
     low = sym.lower()
     jobs.append((f'en_lower_{low}', f'{low} for {word.lower()}', 'en'))
 
-for n, name in enumerate(number_names):
-    jobs.append((f'num_{n}', name, 'en'))
+for n, (name, item) in enumerate(numbers):
+    # "one cat", "eight snails" — zero has nothing to count.
+    jobs.append((f'num_{n}', name if not item else f'{name} {item}', 'en'))
 
 missing = []
 for sym, word, roman in malayalam:
@@ -95,23 +105,29 @@ for sym, word, roman in malayalam:
     if cid is None:
         missing.append(sym)
         continue
-    jobs.append((cid, word, 'ml'))
+    # Letter first, then the word. The comma matters: without a pause gTTS
+    # runs the bare vowel straight into the word and it turns to mush.
+    jobs.append((cid, f'{sym}, {word}', 'ml'))
 
 if missing:
     print('!! not in the character list, skipped:', ' '.join(missing),
           file=sys.stderr)
 
 # ── generate ─────────────────────────────────────────────────────────────────
-print(f'{len(jobs)} clips → {os.path.normpath(OUT)}\n')
+flags = ''.join([
+    '  (--force: overwriting)' if FORCE else '',
+    '  (--slow)' if SLOW else '',
+])
+print(f'{len(jobs)} clips → {os.path.normpath(OUT)}{flags}\n')
 made = skipped = failed = 0
 
 for cid, text, lang in jobs:
     path = os.path.join(OUT, f'{cid}.mp3')
-    if os.path.exists(path):
+    if os.path.exists(path) and not FORCE:
         skipped += 1
         continue
     try:
-        gTTS(text=text, lang=lang, slow=False).save(path)
+        gTTS(text=text, lang=lang, slow=SLOW).save(path)
         made += 1
         print(f'  ✓  {cid}.mp3  [{lang}] "{text}"')
         time.sleep(0.15)   # polite delay, gTTS rate-limits

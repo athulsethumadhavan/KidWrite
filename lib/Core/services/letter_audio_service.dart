@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
 import '../../domain/entities/character.dart';
+import '../data/letter_words.dart';
 
 /// Plays the pre-recorded pronunciation for a character.
 ///
@@ -16,7 +17,9 @@ class LetterAudioService {
   bool _ttsReady = false;
 
   Future<void> playLetter(Character character) async {
-    final assetPath = 'audio/letters/${character.id}.mp3';
+    // fileStem, not id: capital and small English share the en_lower_ prefix,
+    // so their clips would collide as filenames.
+    final assetPath = 'audio/letters/${LetterWords.fileStem(character)}.mp3';
 
     // Try pre-recorded file first
     if (await _assetExists(assetPath)) {
@@ -48,7 +51,8 @@ class LetterAudioService {
     String spoken, {
     String? roman,
   }) async {
-    final assetPath = 'audio/words/${character.id}.mp3';
+    // fileStem, not id: en_lower_A and en_lower_a would be the same file.
+    final assetPath = 'audio/words/${LetterWords.fileStem(character)}.mp3';
 
     if (await _assetExists(assetPath)) {
       try {
@@ -90,10 +94,14 @@ class LetterAudioService {
   Future<void> _prepareTts() async {
     if (_ttsReady) return;
     await _tts.setVolume(1.0);
-    await _tts.setSpeechRate(0.45);
     await _tts.setPitch(1.1);
     _ttsReady = true;
   }
+
+  /// Indic voices are harder to follow at the pace that suits English, so
+  /// they get a slower one. Set per utterance, since a child can move between
+  /// scripts without the service being rebuilt.
+  static double _rateFor(String locale) => locale == 'en-US' ? 0.45 : 0.36;
 
   /// Whether the device can actually speak [locale]. Cached — the platform
   /// call is not free and the answer can't change while the app is running.
@@ -121,32 +129,37 @@ class LetterAudioService {
     String? fallbackText,
   }) async {
     await _tts.stop();
-    if (await _canSpeak(locale)) {
+
+    // English is the engine's default and is always installed. Asking about
+    // it is not just pointless — some platforms answer "no" for a locale they
+    // can obviously speak, and taking that at face value left the app silent.
+    // So only non-English locales are checked, and there is always something
+    // to say at the end.
+    if (locale == 'en-US' || await _canSpeak(locale)) {
       await _tts.setLanguage(locale);
+      await _tts.setSpeechRate(_rateFor(locale));
       await _tts.speak(text);
       return;
     }
-    if (fallbackText == null || fallbackText.isEmpty) return;
+
     await _tts.setLanguage('en-US');
-    await _tts.speak(fallbackText);
+    await _tts.setSpeechRate(_rateFor('en-US'));
+    await _tts.speak(fallbackText?.isNotEmpty == true ? fallbackText! : text);
   }
 
   Future<void> _speakFallback(Character character) async {
     await _prepareTts();
-    // English/numbers: speak the pronunciation word ("ay", "bee", "five") —
-    // speaking the raw symbol makes some TTS engines announce the case
-    // ("capital A"). Other scripts: speak the symbol in its locale.
-    const spellOutName = {
-      'english_upper',
-      'english_lower',
-      'numbers',
-      'shapes',
-      'lines',
-    };
-    final spellOut = spellOutName.contains(character.languageId);
+
+    // Letters and numbers are spoken as the character itself: the voice says
+    // the letter's *name* — "A", "five" — whereas feeding it the written hint
+    // ('ay') makes it read the word "aye". Shapes and lines have no sayable
+    // symbol, so those keep their description.
+    const describe = {'shapes', 'lines'};
+    final useName = describe.contains(character.languageId);
+
     await _speakBestEffort(
       locale: _localeFor(character.languageId),
-      text: spellOut ? character.pronunciation : character.symbol,
+      text: useName ? character.pronunciation : character.symbol,
       // No Malayalam voice on this device → read the romanised name
       // ('a', 'aa', 'ka') rather than saying nothing.
       fallbackText: character.pronunciation,
