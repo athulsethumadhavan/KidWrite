@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../Core/Constants/app_colors.dart';
+
 class MusicToggleButton extends StatelessWidget {
   final bool isEnabled;
   final VoidCallback onTap;

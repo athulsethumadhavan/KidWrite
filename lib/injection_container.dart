@@ -13,7 +13,8 @@ import 'domain/usecases/get_languages.dart';
 import 'domain/usecases/get_progress.dart';
 import 'domain/usecases/save_progress.dart';
 import 'Presentation/blocs/home/home_bloc.dart';
-import 'Presentation/blocs/Music/music_bloc.dart';import 'Presentation/blocs/progress/progress_bloc.dart';
+import 'Presentation/blocs/Music/music_bloc.dart';
+import 'Presentation/blocs/progress/progress_bloc.dart';
 import 'Presentation/blocs/writing/writing_bloc.dart';
 
 final sl = GetIt.instance;

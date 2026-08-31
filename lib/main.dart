@@ -7,7 +7,8 @@ import 'package:kid_write/Core/router/app_router.dart';
 import 'package:kid_write/Core/services/deep_link_handler.dart';
 import 'package:kid_write/Core/theme/app_theme.dart';
 
-import 'Presentation/blocs/Music/music_bloc.dart';import 'injection_container.dart';
+import 'Presentation/blocs/Music/music_bloc.dart';
+import 'injection_container.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

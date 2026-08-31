@@ -8,10 +8,14 @@ import 'package:kid_write/Core/services/review_prompt_service.dart';
 import 'package:kid_write/Core/services/update_checker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../Core/Constants/app_colors.dart';import '../../Core/utils/responsive_helper.dart';import '../../Core/widgets/animated_background.dart';import '../../domain/entities/language.dart';
+import '../../Core/Constants/app_colors.dart';
+import '../../Core/utils/responsive_helper.dart';
+import '../../Core/widgets/animated_background.dart';
+import '../../domain/entities/language.dart';
 import '../../injection_container.dart';
 import '../blocs/home/home_bloc.dart';
-import '../blocs/Music/music_bloc.dart';import '../widgets/language_card.dart';
+import '../blocs/Music/music_bloc.dart';
+import '../widgets/language_card.dart';
 import '../widgets/music_toggle_button.dart';
 import '../widgets/scroll_under_header.dart';
 

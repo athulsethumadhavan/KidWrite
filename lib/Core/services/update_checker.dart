@@ -7,6 +7,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../Constants/app_colors.dart';
+
 /// Checks a self-hosted version.json (GitHub Pages) and prompts the user to
 /// update. Two levels:
 ///

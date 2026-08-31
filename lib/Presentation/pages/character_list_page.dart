@@ -5,8 +5,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../Core/Constants/app_colors.dart';import '../../Core/Constants/app_constants.dart';import '../../Core/tracing/letter_strokes.dart';
-import '../../Core/widgets/animated_background.dart';import '../../domain/entities/character.dart';
+import '../../Core/Constants/app_colors.dart';
+import '../../Core/Constants/app_constants.dart';
+import '../../Core/tracing/letter_strokes.dart';
+import '../../Core/widgets/animated_background.dart';
+import '../../domain/entities/character.dart';
 import '../../domain/entities/progress.dart';
 import '../../domain/usecases/get_characters.dart';
 import '../../injection_container.dart';
@@ -14,6 +17,7 @@ import '../blocs/progress/progress_bloc.dart';
 import '../widgets/music_toggle_button.dart';
 import '../widgets/scroll_under_header.dart';
 import '../blocs/Music/music_bloc.dart';
+
 class CharacterListPage extends StatefulWidget {
   final String languageId;
   const CharacterListPage({super.key, required this.languageId});
