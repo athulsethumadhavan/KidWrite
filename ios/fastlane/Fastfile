@@ -1,0 +1,151 @@
+# KidWrite — iOS release lanes
+#
+#   cd ios && bundle exec fastlane beta        # TestFlight
+#   cd ios && bundle exec fastlane release     # App Store, held for manual release
+#
+# Signing uses an App Store Connect API key rather than an Apple ID, so it
+# works on CI without 2FA prompts.
+
+default_platform(:ios)
+
+APP_ROOT = File.expand_path("../..", __dir__)
+
+# The marketing version — the "1.3.1" part of pubspec's `version:` line.
+def marketing_version
+  File.read("#{APP_ROOT}/pubspec.yaml")[/^version:\s*([0-9]+\.[0-9]+\.[0-9]+)/, 1]
+end
+
+# The two stores count differently and pubspec only has one `+N` to give.
+#
+#   Android  versionCode is a single counter for the life of the app. It never
+#            restarts, so pubspec's `+N` has to keep climbing forever.
+#   iOS      the build number only has to rise *within* a marketing version, so
+#            it restarts at 1 the moment the version name changes.
+#
+# Reusing pubspec's number on iOS would therefore ship 1.3.1 as build 5 for no
+# reason. Ask App Store Connect what it already holds for this version instead:
+# a brand-new version has none, which gives 1.
+def next_ios_build_number(version)
+  return ENV["IOS_BUILD_NUMBER"] if ENV["IOS_BUILD_NUMBER"]
+
+  latest = latest_testflight_build_number(
+    version: version,
+    initial_build_number: 0
+  )
+  (latest.to_i + 1).to_s
+end
+
+platform :ios do
+  before_all do
+    if ENV["APP_STORE_CONNECT_KEY_ID"]
+      app_store_connect_api_key(
+        key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
+        issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+        key_content: ENV["APP_STORE_CONNECT_KEY_CONTENT"],
+        is_key_content_base64: true,
+        in_house: false
+      )
+    end
+  end
+
+  desc "Run the unit and widget tests"
+  lane :test do
+    Dir.chdir(APP_ROOT) do
+      sh("flutter", "pub", "get")
+      sh("flutter", "analyze")
+      sh("flutter", "test")
+    end
+  end
+
+  desc "Fetch the distribution certificate and provisioning profile"
+  lane :signing do
+    # A fresh CI runner has an empty keychain, so the certificate has to come
+    # from somewhere. match keeps it encrypted in a private git repo and
+    # installs it here; every machine ends up with the *same* certificate
+    # rather than each minting its own and hitting Apple's limit.
+    #
+    # readonly on CI: a runner must never create or revoke a certificate. Run
+    # `bundle exec fastlane match appstore` by hand when one needs renewing.
+    setup_ci if ENV["CI"]
+
+    match(
+      type: "appstore",
+      readonly: ENV["CI"] ? true : false,
+      git_url: ENV["MATCH_GIT_URL"],
+      storage_mode: "git"
+    )
+  end
+
+  desc "Build a signed IPA"
+  lane :build do
+    version = marketing_version
+    build_number = next_ios_build_number(version)
+    UI.important("Building #{version} (#{build_number})")
+
+    signing
+
+    Dir.chdir(APP_ROOT) do
+      sh("flutter", "clean")
+      sh("flutter", "pub", "get")
+      # Flutter drives the Xcode build; skip its own codesign so fastlane can
+      # do it with the profile it just fetched. The version is passed
+      # explicitly so iOS keeps its own build numbering — see the top of this
+      # file. flutter writes both into Generated.xcconfig, which is where the
+      # Xcode project reads them from, so build_app below inherits them.
+      sh("flutter", "build", "ipa", "--release", "--no-codesign",
+         "--build-name=#{version}", "--build-number=#{build_number}")
+    end
+
+    build_app(
+      workspace: "Runner.xcworkspace",
+      scheme: "Runner",
+      export_method: "app-store",
+      output_directory: "#{APP_ROOT}/build/ios/ipa",
+      output_name: "KidWrite.ipa",
+      clean: false,
+      # Point Xcode at the profile match just installed rather than letting it
+      # guess. Without this it falls back to automatic signing and fails on a
+      # runner that has no account signed in.
+      export_options: {
+        signingStyle: "manual",
+        provisioningProfiles: {
+          "com.atsIOSDev.kidWrite" => "match AppStore com.atsIOSDev.kidWrite"
+        }
+      }
+    )
+  end
+
+  desc "Upload to TestFlight — what a merge to main does"
+  lane :beta do
+    test
+    build
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      changelog: File.exist?("#{APP_ROOT}/RELEASE_NOTES.md") ?
+        File.read("#{APP_ROOT}/RELEASE_NOTES.md") : "Bug fixes and improvements"
+    )
+  end
+
+  desc "Submit the TestFlight build for App Store review. Manual, on purpose."
+  lane :release do
+    # No build step: this submits the binary already sitting in App Store
+    # Connect, so what ships is what was tested on a device.
+    upload_to_app_store(
+      build_number: latest_testflight_build_number(version: marketing_version).to_s,
+      app_version: marketing_version,
+      skip_binary_upload: true,
+      # Held rather than auto-released: the version.json prompt must not go
+      # out before the build is actually downloadable.
+      automatic_release: false,
+      submit_for_review: true,
+      force: true,
+      skip_screenshots: true,
+      skip_metadata: false,
+      precheck_include_in_app_purchases: false,
+      submission_information: {
+        add_id_info_uses_idfa: false,
+        export_compliance_uses_encryption: false
+      }
+    )
+  end
+end

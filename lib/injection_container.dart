@@ -26,18 +26,18 @@ Future<void> initDependencies() async {
 
   // Data sources
   sl.registerLazySingleton<CharacterLocalDataSource>(
-        () => CharacterLocalDataSourceImpl(),
+    () => CharacterLocalDataSourceImpl(),
   );
   sl.registerLazySingleton<ProgressLocalDataSource>(
-        () => ProgressLocalDataSourceImpl(prefs: sl()),
+    () => ProgressLocalDataSourceImpl(prefs: sl()),
   );
 
   // Repositories
   sl.registerLazySingleton<CharacterRepository>(
-        () => CharacterRepositoryImpl(dataSource: sl()),
+    () => CharacterRepositoryImpl(dataSource: sl()),
   );
   sl.registerLazySingleton<ProgressRepository>(
-        () => ProgressRepositoryImpl(dataSource: sl()),
+    () => ProgressRepositoryImpl(dataSource: sl()),
   );
 
   // Use cases
@@ -49,12 +49,9 @@ Future<void> initDependencies() async {
   // BLoCs (factory — new instance per page)
   sl.registerFactory(() => HomeBloc(getLanguages: sl()));
   sl.registerFactory(() => WritingBloc());
-  sl.registerFactory(
-        () => ProgressBloc(getProgress: sl(), saveProgress: sl()),
-  );
+  sl.registerFactory(() => ProgressBloc(getProgress: sl(), saveProgress: sl()));
   sl.registerLazySingleton(() => MusicBloc(prefs: sl()));
 
   // Letter pronunciation audio
   sl.registerLazySingleton(() => LetterAudioService());
 }
-

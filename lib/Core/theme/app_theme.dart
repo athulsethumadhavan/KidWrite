@@ -20,9 +20,7 @@ class AppTheme {
       textTheme: _buildTextTheme(),
       cardTheme: CardThemeData(
         elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         color: AppColors.cardBg,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(

@@ -98,11 +98,7 @@ class LetterWords {
 
   static final Map<String, LetterWord> _upper = {
     for (final e in _english)
-      e[0]: LetterWord(
-        word: e[1],
-        emoji: e[2],
-        spoken: '${e[0]} for ${e[1]}',
-      ),
+      e[0]: LetterWord(word: e[1], emoji: e[2], spoken: '${e[0]} for ${e[1]}'),
   };
 
   static final Map<String, LetterWord> _lower = {
@@ -123,7 +119,7 @@ class LetterWords {
   /// number word, what is being counted (already plural where it should be),
   /// one of the things.
   static const List<List<String>> _numberItems = [
-    ['zero', '', '🧺'],          // an empty basket — nothing to count
+    ['zero', '', '🧺'], // an empty basket — nothing to count
     ['one', 'cat', '🐱'],
     ['two', 'apples', '🍎'],
     ['three', 'balloons', '🎈'],

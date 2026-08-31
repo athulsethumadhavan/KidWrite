@@ -34,8 +34,7 @@ class _CharacterListPageState extends State<CharacterListPage> {
   @override
   void initState() {
     super.initState();
-    _progressBloc = sl<ProgressBloc>()
-      ..add(ProgressLoad(widget.languageId));
+    _progressBloc = sl<ProgressBloc>()..add(ProgressLoad(widget.languageId));
     _loadCharacters();
   }
 
@@ -49,7 +48,12 @@ class _CharacterListPageState extends State<CharacterListPage> {
     final chars = await sl<GetCharacters>()(
       GetCharactersParams(languageId: widget.languageId),
     );
-    if (mounted) setState(() { _characters = chars; _loading = false; });
+    if (mounted) {
+      setState(() {
+        _characters = chars;
+        _loading = false;
+      });
+    }
   }
 
   Color get _langColor =>
@@ -96,8 +100,7 @@ class _CharacterListPageState extends State<CharacterListPage> {
                         bloc: sl<MusicBloc>(),
                         builder: (_, s) => MusicToggleButton(
                           isEnabled: s.isMusicEnabled,
-                          onTap: () =>
-                              sl<MusicBloc>().add(const MusicToggle()),
+                          onTap: () => sl<MusicBloc>().add(const MusicToggle()),
                         ),
                       ),
                     ],
@@ -108,11 +111,10 @@ class _CharacterListPageState extends State<CharacterListPage> {
               ],
             ),
             builder: (context, topInset) => _loading
-                      ? const Center(child: CircularProgressIndicator())
-                      : BlocBuilder<ProgressBloc, ProgressState>(
+                ? const Center(child: CircularProgressIndicator())
+                : BlocBuilder<ProgressBloc, ProgressState>(
                     builder: (context, progressState) {
-                      final progressMap =
-                      progressState is ProgressLoaded
+                      final progressMap = progressState is ProgressLoaded
                           ? progressState.progressMap
                           : <String, Progress>{};
 
@@ -129,8 +131,7 @@ class _CharacterListPageState extends State<CharacterListPage> {
                             unlockedIds.add(_characters[i].id);
                             continue;
                           }
-                          final prev =
-                              progressMap[_characters[i - 1].id];
+                          final prev = progressMap[_characters[i - 1].id];
                           if ((prev?.successCount ?? 0) >= 3) {
                             unlockedIds.add(_characters[i].id);
                           }
@@ -147,16 +148,17 @@ class _CharacterListPageState extends State<CharacterListPage> {
                         onTap: (char) {
                           context
                               .push(
-                            '/practice/${widget.languageId}/${char.id}',
-                            extra: char,
-                          )
+                                '/practice/${widget.languageId}/${char.id}',
+                                extra: char,
+                              )
                               .then((_) {
-                            // Coming back — refresh earned stars.
-                            if (mounted) {
-                              _progressBloc
-                                  .add(ProgressLoad(widget.languageId));
-                            }
-                          });
+                                // Coming back — refresh earned stars.
+                                if (mounted) {
+                                  _progressBloc.add(
+                                    ProgressLoad(widget.languageId),
+                                  );
+                                }
+                              });
                         },
                       );
                     },
@@ -224,8 +226,7 @@ class _LevelPathMap extends StatelessWidget {
     }
     // No bottom padding — the map ends with the last bubble.
     final top = topInset + _topPad;
-    final mapHeight =
-        top + (characters.length - 1) * _spacingY + _nodeSize;
+    final mapHeight = top + (characters.length - 1) * _spacingY + _nodeSize;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -249,10 +250,7 @@ class _LevelPathMap extends StatelessWidget {
         final lastY = centers.last.dy;
         for (double y = centers.first.dy; y <= lastY; y += 6) {
           final t = (y - centers.first.dy) / _spacingY;
-          trail.add(Offset(
-            xOffset + _xFrac(0.0 + t) * pathWidth,
-            y,
-          ));
+          trail.add(Offset(xOffset + _xFrac(0.0 + t) * pathWidth, y));
         }
         trail.add(centers.last);
 
@@ -265,50 +263,51 @@ class _LevelPathMap extends StatelessWidget {
                 // The winding trail behind the nodes.
                 CustomPaint(
                   size: Size(width, mapHeight),
-                  painter: _TrailPainter(
-                    trail: trail,
-                    color: accentColor,
-                  ),
+                  painter: _TrailPainter(trail: trail, color: accentColor),
                 ),
                 for (int i = 0; i < characters.length; i++)
                   Positioned(
                     left: centers[i].dx - _nodeSize / 2,
                     top: centers[i].dy - _nodeSize / 2,
-                    child: _LevelNode(
-                      character: characters[i],
-                      stars: (progressMap[characters[i].id]
-                          ?.successCount ??
-                          0)
-                          .clamp(0, 3)
-                          .toInt(),
-                      isLocked:
-                      !unlockedIds.contains(characters[i].id),
-                      accentColor: accentColor,
-                      languageId: languageId,
-                      size: _nodeSize,
-                      onTap: () => onTap(characters[i]),
-                    )
-                    // Gentle idle bobbing, each bubble slightly out of
-                    // phase so the path feels alive.
-                        .animate(onPlay: (c) => c.repeat(reverse: true))
-                        .moveY(
-                      begin: -3.5,
-                      end: 3.5,
-                      duration:
-                      Duration(milliseconds: 1400 + (i % 5) * 180),
-                      curve: Curves.easeInOut,
-                    )
-                    // One-time pop-in entrance.
-                        .animate(
-                        delay: Duration(
-                            milliseconds: math.min(i * 40, 600)))
-                        .fadeIn(duration: 300.ms)
-                        .scale(
-                      begin: const Offset(0.7, 0.7),
-                      end: const Offset(1, 1),
-                      duration: 350.ms,
-                      curve: Curves.easeOutBack,
-                    ),
+                    child:
+                        _LevelNode(
+                              character: characters[i],
+                              stars:
+                                  (progressMap[characters[i].id]
+                                              ?.successCount ??
+                                          0)
+                                      .clamp(0, 3)
+                                      .toInt(),
+                              isLocked: !unlockedIds.contains(characters[i].id),
+                              accentColor: accentColor,
+                              languageId: languageId,
+                              size: _nodeSize,
+                              onTap: () => onTap(characters[i]),
+                            )
+                            // Gentle idle bobbing, each bubble slightly out of
+                            // phase so the path feels alive.
+                            .animate(onPlay: (c) => c.repeat(reverse: true))
+                            .moveY(
+                              begin: -3.5,
+                              end: 3.5,
+                              duration: Duration(
+                                milliseconds: 1400 + (i % 5) * 180,
+                              ),
+                              curve: Curves.easeInOut,
+                            )
+                            // One-time pop-in entrance.
+                            .animate(
+                              delay: Duration(
+                                milliseconds: math.min(i * 40, 600),
+                              ),
+                            )
+                            .fadeIn(duration: 300.ms)
+                            .scale(
+                              begin: const Offset(0.7, 0.7),
+                              end: const Offset(1, 1),
+                              duration: 350.ms,
+                              curve: Curves.easeOutBack,
+                            ),
                   ),
               ],
             ),
@@ -355,8 +354,7 @@ class _TrailPainter extends CustomPainter {
     for (final metric in metrics) {
       double d = 10;
       while (d < metric.length) {
-        final extract =
-        metric.extractPath(d, math.min(d + 10, metric.length));
+        final extract = metric.extractPath(d, math.min(d + 10, metric.length));
         canvas.drawPath(extract, dashPaint);
         d += 24;
       }
@@ -448,10 +446,7 @@ class _LevelNode extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    bubbleColor,
-                    bubbleColor.withValues(alpha: 0.72),
-                  ],
+                  colors: [bubbleColor, bubbleColor.withValues(alpha: 0.72)],
                 ),
                 border: Border.all(color: Colors.white, width: 4),
                 boxShadow: [
@@ -480,49 +475,50 @@ class _LevelNode extends StatelessWidget {
                       ),
                     ),
                   Center(
-                    child: (languageId == 'shapes' ||
-                        languageId == 'lines')
-                    // Shapes are painted from their own stroke data so
-                    // they look identical on every device.
+                    child: (languageId == 'shapes' || languageId == 'lines')
+                        // Shapes are painted from their own stroke data so
+                        // they look identical on every device.
                         ? SizedBox(
-                      width: size * 0.56,
-                      height: size * 0.56,
-                      child: CustomPaint(
-                        painter: _ShapeGlyphPainter(
-                          strokes:
-                          LetterStrokes.of(character.symbol) ??
-                              const [],
-                          color: Colors.white.withValues(
-                              alpha: isLocked ? 0.28 : 1.0),
-                        ),
-                      ),
-                    )
-                    // Two-part symbols (അം, അഃ) are wider than one letter and
-                    // were wrapping, dropping the mark onto a second line
-                    // underneath. Keep it on one line and shrink to fit so the
-                    // mark stays beside the letter.
+                            width: size * 0.56,
+                            height: size * 0.56,
+                            child: CustomPaint(
+                              painter: _ShapeGlyphPainter(
+                                strokes:
+                                    LetterStrokes.of(character.symbol) ??
+                                    const [],
+                                color: Colors.white.withValues(
+                                  alpha: isLocked ? 0.28 : 1.0,
+                                ),
+                              ),
+                            ),
+                          )
+                        // Two-part symbols (അം, അഃ) are wider than one letter and
+                        // were wrapping, dropping the mark onto a second line
+                        // underneath. Keep it on one line and shrink to fit so the
+                        // mark stays beside the letter.
                         : SizedBox(
-                      width: size * 0.72,
-                      height: size * 0.60,
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          character.symbol,
-                          maxLines: 1,
-                          softWrap: false,
-                          overflow: TextOverflow.visible,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: size * 0.52,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white
-                                .withValues(alpha: isLocked ? 0.28 : 1.0),
-                            fontFamily: _fontFamily(),
-                            height: 1.0,
+                            width: size * 0.72,
+                            height: size * 0.60,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                character.symbol,
+                                maxLines: 1,
+                                softWrap: false,
+                                overflow: TextOverflow.visible,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: size * 0.52,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white.withValues(
+                                    alpha: isLocked ? 0.28 : 1.0,
+                                  ),
+                                  fontFamily: _fontFamily(),
+                                  height: 1.0,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    ),
                   ),
                   // Lock sits ON TOP of the (faint) letter.
                   if (isLocked)

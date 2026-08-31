@@ -110,10 +110,7 @@ class DrawingCanvas extends StatelessWidget {
                 ),
               ),
               if (showHand && _hasTarget)
-                TracingHand(
-                  stroke: _scaledTarget(),
-                  color: accentColor,
-                ),
+                TracingHand(stroke: _scaledTarget(), color: accentColor),
             ],
           ),
         ),
@@ -193,8 +190,11 @@ class _CanvasPainter extends CustomPainter {
       if (s.length >= 2) {
         canvas.drawPath(pathOf(s), outline);
       } else if (s.isNotEmpty) {
-        canvas.drawCircle(scaled(s.first), outlineWidth / 2,
-            Paint()..color = AppColors.guideStroke);
+        canvas.drawCircle(
+          scaled(s.first),
+          outlineWidth / 2,
+          Paint()..color = AppColors.guideStroke,
+        );
       }
     }
     final fill = bodyPaint(AppColors.guideColor, bodyWidth);
@@ -202,8 +202,11 @@ class _CanvasPainter extends CustomPainter {
       if (s.length >= 2) {
         canvas.drawPath(pathOf(s), fill);
       } else if (s.isNotEmpty) {
-        canvas.drawCircle(scaled(s.first), bodyWidth / 2,
-            Paint()..color = AppColors.guideColor);
+        canvas.drawCircle(
+          scaled(s.first),
+          bodyWidth / 2,
+          Paint()..color = AppColors.guideColor,
+        );
       }
     }
   }
@@ -271,18 +274,18 @@ class _CanvasPainter extends CustomPainter {
   // mask in WritingBloc, so the two always agree.
   void _drawGuide(Canvas canvas, Size size) {
     TextPainter build(Paint? stroke) => TextPainter(
-          text: TextSpan(
-            text: character.symbol,
-            style: TextStyle(
-              fontSize: size.width * 0.72,
-              color: stroke == null ? AppColors.guideColor : null,
-              foreground: stroke,
-              fontWeight: FontWeight.w900,
-              fontFamily: _fontFamily(),
-            ),
-          ),
-          textDirection: TextDirection.ltr,
-        )..layout();
+      text: TextSpan(
+        text: character.symbol,
+        style: TextStyle(
+          fontSize: size.width * 0.72,
+          color: stroke == null ? AppColors.guideColor : null,
+          foreground: stroke,
+          fontWeight: FontWeight.w900,
+          fontFamily: _fontFamily(),
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
 
     final fill = build(null);
     if (fill.width <= 0 || fill.height <= 0) return;
@@ -347,8 +350,7 @@ class _CanvasPainter extends CustomPainter {
             (points[i].dx + points[i + 1].dx) / 2,
             (points[i].dy + points[i + 1].dy) / 2,
           );
-          path.quadraticBezierTo(
-              points[i].dx, points[i].dy, mid.dx, mid.dy);
+          path.quadraticBezierTo(points[i].dx, points[i].dy, mid.dx, mid.dy);
         } else {
           path.lineTo(points[i].dx, points[i].dy);
         }
@@ -378,11 +380,11 @@ class _CanvasPainter extends CustomPainter {
   @override
   bool shouldRepaint(_CanvasPainter old) =>
       old.strokes != strokes ||
-          old.currentStroke != currentStroke ||
-          old.isSuccess != isSuccess ||
-          old.strokeWidth != strokeWidth ||
-          old.guideStrokes != guideStrokes ||
-          old.shapeStrokes != shapeStrokes ||
-          old.targetStrokeIndex != targetStrokeIndex ||
-          old.showGuideDots != showGuideDots;
+      old.currentStroke != currentStroke ||
+      old.isSuccess != isSuccess ||
+      old.strokeWidth != strokeWidth ||
+      old.guideStrokes != guideStrokes ||
+      old.shapeStrokes != shapeStrokes ||
+      old.targetStrokeIndex != targetStrokeIndex ||
+      old.showGuideDots != showGuideDots;
 }

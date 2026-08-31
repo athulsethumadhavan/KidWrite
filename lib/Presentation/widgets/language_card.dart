@@ -8,11 +8,7 @@ class LanguageCard extends StatelessWidget {
   final Language language;
   final VoidCallback onTap;
 
-  const LanguageCard({
-    super.key,
-    required this.language,
-    required this.onTap,
-  });
+  const LanguageCard({super.key, required this.language, required this.onTap});
 
   Color get _cardColor =>
       AppColors.languageColors[language.id] ?? AppColors.primary;
@@ -29,13 +25,9 @@ class LanguageCard extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              color,
-              color.withValues(alpha: 0.7),
-            ],
+            colors: [color, color.withValues(alpha: 0.7)],
           ),
-          borderRadius:
-          BorderRadius.circular(AppConstants.cardBorderRadius),
+          borderRadius: BorderRadius.circular(AppConstants.cardBorderRadius),
           boxShadow: [
             BoxShadow(
               color: color.withValues(alpha: 0.4),
@@ -45,8 +37,7 @@ class LanguageCard extends StatelessWidget {
           ],
         ),
         child: ClipRRect(
-          borderRadius:
-          BorderRadius.circular(AppConstants.cardBorderRadius),
+          borderRadius: BorderRadius.circular(AppConstants.cardBorderRadius),
           child: Stack(
             children: [
               // Emoji watermark — clipped to card edges

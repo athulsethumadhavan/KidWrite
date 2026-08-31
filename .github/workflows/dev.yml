@@ -1,0 +1,62 @@
+# Gate on dev: analyze + tests. Nothing is built or shipped here.
+#
+# A push cannot be blocked server-side — git either accepts it or it doesn't.
+# What actually enforces "only good code on dev" is branch protection: require
+# this check to pass before a PR can merge. See CI.md.
+
+name: dev checks
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [dev, main]
+  workflow_dispatch:
+
+concurrency:
+  group: dev-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: analyze and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Dependencies
+        run: flutter pub get
+
+      - name: Formatting
+        # Fails on unformatted files rather than rewriting them, so the diff
+        # stays the author's.
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+
+      - name: Test
+        run: flutter test --reporter expanded --coverage
+
+      - name: Coverage summary
+        if: always()
+        run: |
+          if [ -f coverage/lcov.info ]; then
+            covered=$(grep -c '^DA:.*,[1-9]' coverage/lcov.info || true)
+            total=$(grep -c '^DA:' coverage/lcov.info || true)
+            echo "lines covered: $covered / $total" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage/lcov.info
+          if-no-files-found: ignore

@@ -16,10 +16,14 @@ void main() async {
   // Portrait on phones, any orientation on tablets (iPad apps are often
   // held in landscape, and the tracing canvas benefits from the width).
   final shortestSide =
-      WidgetsBinding.instance.platformDispatcher.views.first.physicalSize
+      WidgetsBinding
+          .instance
+          .platformDispatcher
+          .views
+          .first
+          .physicalSize
           .shortestSide /
-          WidgetsBinding.instance.platformDispatcher.views.first
-              .devicePixelRatio;
+      WidgetsBinding.instance.platformDispatcher.views.first.devicePixelRatio;
   await SystemChrome.setPreferredOrientations(
     shortestSide >= 600
         ? DeviceOrientation.values
@@ -45,13 +49,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<MusicBloc> (
+    return BlocProvider<MusicBloc>(
       create: (_) => sl<MusicBloc>(),
       child: MaterialApp.router(
-          title: 'KidWrite',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          routerConfig: appRouter
+        title: 'KidWrite',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        routerConfig: appRouter,
       ),
     );
   }

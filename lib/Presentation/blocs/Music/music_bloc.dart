@@ -19,8 +19,7 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
     on<MusicPlayTap>(_onTap);
   }
 
-  Future<void> _onInit(
-      MusicInitialize event, Emitter<MusicState> emit) async {
+  Future<void> _onInit(MusicInitialize event, Emitter<MusicState> emit) async {
     final musicOn = prefs.getBool(AppConstants.prefMusicEnabled) ?? true;
     final soundOn = prefs.getBool(AppConstants.prefSoundEnabled) ?? true;
     emit(MusicState(isMusicEnabled: musicOn, isSoundEnabled: soundOn));
@@ -31,8 +30,7 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
     }
   }
 
-  Future<void> _onToggle(
-      MusicToggle event, Emitter<MusicState> emit) async {
+  Future<void> _onToggle(MusicToggle event, Emitter<MusicState> emit) async {
     final newEnabled = !state.isMusicEnabled;
     await prefs.setBool(AppConstants.prefMusicEnabled, newEnabled);
 
@@ -46,15 +44,19 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
   }
 
   Future<void> _onSuccess(
-      MusicPlaySuccess event, Emitter<MusicState> emit) async {
+    MusicPlaySuccess event,
+    Emitter<MusicState> emit,
+  ) async {
     if (!state.isSoundEnabled) return;
     try {
-      await _fxPlayer.play(AssetSource(AppConstants.successSoundPath), volume: 0.1);
+      await _fxPlayer.play(
+        AssetSource(AppConstants.successSoundPath),
+        volume: 0.1,
+      );
     } catch (_) {}
   }
 
-  Future<void> _onTap(
-      MusicPlayTap event, Emitter<MusicState> emit) async {
+  Future<void> _onTap(MusicPlayTap event, Emitter<MusicState> emit) async {
     if (!state.isSoundEnabled) return;
     try {
       await _fxPlayer.play(AssetSource(AppConstants.tapSoundPath));

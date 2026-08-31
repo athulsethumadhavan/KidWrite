@@ -34,8 +34,9 @@ class ProgressLocalDataSourceImpl implements ProgressLocalDataSource {
     for (final k in keys) {
       final json = prefs.getString(k);
       if (json != null) {
-        result.add(ProgressModel.fromMap(
-            jsonDecode(json) as Map<String, dynamic>));
+        result.add(
+          ProgressModel.fromMap(jsonDecode(json) as Map<String, dynamic>),
+        );
       }
     }
     return result;

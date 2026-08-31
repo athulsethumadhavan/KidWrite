@@ -66,87 +66,89 @@ class _LetterRewardCardState extends State<LetterRewardCard> {
         child: ColoredBox(
           color: Colors.black.withValues(alpha: 0.35),
           child: Center(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 32),
-              padding: const EdgeInsets.fromLTRB(28, 24, 28, 26),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(32),
-                boxShadow: [
-                  BoxShadow(
-                    color: widget.accentColor.withValues(alpha: 0.35),
-                    blurRadius: 30,
-                    offset: const Offset(0, 12),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Picture
-                  SizedBox(
-                    height: 132,
-                    child: _artwork != null
-                        ? Image(image: _artwork!, fit: BoxFit.contain)
-                        : FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              entry.emoji,
-                              style: const TextStyle(fontSize: 96),
+            child:
+                Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 32),
+                      padding: const EdgeInsets.fromLTRB(28, 24, 28, 26),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(32),
+                        boxShadow: [
+                          BoxShadow(
+                            color: widget.accentColor.withValues(alpha: 0.35),
+                            blurRadius: 30,
+                            offset: const Offset(0, 12),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Picture
+                          SizedBox(
+                            height: 132,
+                            child: _artwork != null
+                                ? Image(image: _artwork!, fit: BoxFit.contain)
+                                : FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      entry.emoji,
+                                      style: const TextStyle(fontSize: 96),
+                                    ),
+                                  ),
+                          ),
+                          const SizedBox(height: 14),
+
+                          // Letter + word on one line: "A  —  Apple"
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                widget.character.symbol,
+                                style: theme.textTheme.displaySmall?.copyWith(
+                                  fontFamily: widget.fontFamily,
+                                  color: widget.accentColor,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Flexible(
+                                child: Text(
+                                  entry.word,
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.headlineSmall
+                                      ?.copyWith(
+                                        fontFamily: widget.fontFamily,
+                                        color: AppColors.textDark,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          // Roman spelling, for scripts a parent may not read.
+                          if (entry.roman != null) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              entry.roman!,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: AppColors.textLight,
+                              ),
                             ),
-                          ),
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Letter + word on one line: "A  —  Apple"
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        widget.character.symbol,
-                        style: theme.textTheme.displaySmall?.copyWith(
-                          fontFamily: widget.fontFamily,
-                          color: widget.accentColor,
-                          fontWeight: FontWeight.w800,
-                        ),
+                          ],
+                        ],
                       ),
-                      const SizedBox(width: 14),
-                      Flexible(
-                        child: Text(
-                          entry.word,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontFamily: widget.fontFamily,
-                            color: AppColors.textDark,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  // Roman spelling, for scripts a parent may not read.
-                  if (entry.roman != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      entry.roman!,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: AppColors.textLight,
-                      ),
+                    )
+                    .animate()
+                    .fadeIn(duration: 220.ms)
+                    .scale(
+                      begin: const Offset(0.7, 0.7),
+                      end: const Offset(1, 1),
+                      duration: 420.ms,
+                      curve: Curves.easeOutBack,
                     ),
-                  ],
-                ],
-              ),
-            )
-                .animate()
-                .fadeIn(duration: 220.ms)
-                .scale(
-                  begin: const Offset(0.7, 0.7),
-                  end: const Offset(1, 1),
-                  duration: 420.ms,
-                  curve: Curves.easeOutBack,
-                ),
           ),
         ),
       ),
