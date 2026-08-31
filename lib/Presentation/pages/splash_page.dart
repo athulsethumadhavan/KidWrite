@@ -3,11 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kid_write/Core/Constants/app_constants.dart';
 
-import '../../core/constants/app_colors.dart';
-import '../../core/widgets/animated_background.dart';
-import '../../injection_container.dart';
-import '../blocs/music/music_bloc.dart';
-import 'onboarding_page.dart';
+import '../../Core/Constants/app_colors.dart';import '../../Core/widgets/animated_background.dart';import '../../injection_container.dart';
+import '../blocs/Music/music_bloc.dart';import 'onboarding_page.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});

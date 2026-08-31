@@ -3,8 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:kid_write/Core/Constants/app_constants.dart';
 
-import '../../core/constants/app_colors.dart';
-import '../../domain/entities/character.dart';
+import '../../Core/Constants/app_colors.dart';import '../../domain/entities/character.dart';
 import 'tracing_hand.dart';
 
 class DrawingCanvas extends StatelessWidget {

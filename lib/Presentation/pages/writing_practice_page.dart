@@ -9,15 +9,11 @@ import 'package:kid_write/Core/Constants/app_constants.dart';
 import 'package:kid_write/Core/services/letter_audio_service.dart';
 import 'package:kid_write/Core/services/review_prompt_service.dart';
 
-import '../../core/constants/app_colors.dart';
-import 'package:kid_write/Core/data/letter_words.dart';
-import '../../core/utils/responsive_helper.dart';
-import '../../core/widgets/animated_background.dart';
-import '../../domain/entities/character.dart';
+import '../../Core/Constants/app_colors.dart';import 'package:kid_write/Core/data/letter_words.dart';
+import '../../Core/utils/responsive_helper.dart';import '../../Core/widgets/animated_background.dart';import '../../domain/entities/character.dart';
 import '../../domain/usecases/get_progress.dart';
 import '../../injection_container.dart';
-import '../blocs/music/music_bloc.dart';
-import '../blocs/progress/progress_bloc.dart';
+import '../blocs/Music/music_bloc.dart';import '../blocs/progress/progress_bloc.dart';
 import '../blocs/writing/writing_bloc.dart';
 import '../widgets/drawing_canvas.dart';
 import '../widgets/letter_reward_card.dart';

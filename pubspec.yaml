@@ -83,7 +83,6 @@ flutter:
 
   assets:
     - assets/audio/
-    - assets/animations/
     - assets/audio/letters/
     # Optional overrides for the "A for Apple" reward card — see the READMEs
     # in each folder. Empty is fine: emoji and live TTS are used instead.

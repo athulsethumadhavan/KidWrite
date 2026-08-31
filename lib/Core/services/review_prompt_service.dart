@@ -5,9 +5,7 @@ import 'package:in_app_review/in_app_review.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../constants/app_colors.dart';
-import '../constants/app_constants.dart';
-
+import '../Constants/app_colors.dart';import '../Constants/app_constants.dart';
 /// Asks the parent for a review once the child has finished a few letters —
 /// and only if they haven't reviewed (or opted out) already.
 ///

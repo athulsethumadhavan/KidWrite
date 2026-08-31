@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kid_write/Core/Constants/app_constants.dart';
 
-import '../../core/constants/app_colors.dart';
-import '../../domain/entities/language.dart';
+import '../../Core/Constants/app_colors.dart';import '../../domain/entities/language.dart';
 
 class LanguageCard extends StatelessWidget {
   final Language language;
