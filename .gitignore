@@ -47,3 +47,16 @@ app.*.map.json
 # Claude session files
 .claude/
 /CLAUDE.md
+
+# CI / Fastlane secrets — never commit these
+android/fastlane/play-store-key.json
+android/fastlane/report.xml
+ios/fastlane/report.xml
+**/fastlane/README.md
+*.keystore
+*.jks
+coverage/
+
+# Bundler installs gems into the project so nothing needs sudo
+**/vendor/bundle/
+**/.bundle/

@@ -16,25 +16,31 @@ class LetterStrokes {
 
   // ── Path building helpers ─────────────────────────────────────────────────
 
-  static List<Offset> _ln(double x1, double y1, double x2, double y2,
-      [int n = 14]) =>
-      List.generate(
-        n,
-            (i) => Offset(
-          x1 + (x2 - x1) * i / (n - 1),
-          y1 + (y2 - y1) * i / (n - 1),
-        ),
-      );
+  static List<Offset> _ln(
+    double x1,
+    double y1,
+    double x2,
+    double y2, [
+    int n = 14,
+  ]) => List.generate(
+    n,
+    (i) => Offset(x1 + (x2 - x1) * i / (n - 1), y1 + (y2 - y1) * i / (n - 1)),
+  );
 
   /// Elliptic arc. Angles in degrees, 0 = right, 90 = down (screen coords).
   /// Sweeps from [a0] to [a1] (either direction).
-  static List<Offset> _arc(double cx, double cy, double rx, double ry,
-      double a0, double a1,
-      [int n = 24]) =>
-      List.generate(n, (i) {
-        final a = (a0 + (a1 - a0) * i / (n - 1)) * pi / 180;
-        return Offset(cx + rx * cos(a), cy + ry * sin(a));
-      });
+  static List<Offset> _arc(
+    double cx,
+    double cy,
+    double rx,
+    double ry,
+    double a0,
+    double a1, [
+    int n = 24,
+  ]) => List.generate(n, (i) {
+    final a = (a0 + (a1 - a0) * i / (n - 1)) * pi / 180;
+    return Offset(cx + rx * cos(a), cy + ry * sin(a));
+  });
 
   /// Concatenates segments into a single continuous stroke.
   static List<Offset> _cat(List<List<Offset>> parts) =>
@@ -54,8 +60,12 @@ class LetterStrokes {
   }
 
   /// Five-pointed star, drawn as one closed outline.
-  static List<Offset> _star(double cx, double cy, double rOuter,
-      double rInner) {
+  static List<Offset> _star(
+    double cx,
+    double cy,
+    double rOuter,
+    double rInner,
+  ) {
     final pts = <Offset>[];
     for (int i = 0; i < 10; i++) {
       final r = i.isEven ? rOuter : rInner;
@@ -66,41 +76,41 @@ class LetterStrokes {
   }
 
   /// Sine wave across the box — the classic "wave" pre-writing pattern.
-  static List<Offset> _wave(double x1, double x2, double cy, double amp,
-      double cycles,
-      [int n = 60]) =>
-      List.generate(n + 1, (i) {
-        final t = i / n;
-        return Offset(
-          x1 + (x2 - x1) * t,
-          cy + amp * sin(2 * pi * cycles * t),
-        );
-      });
+  static List<Offset> _wave(
+    double x1,
+    double x2,
+    double cy,
+    double amp,
+    double cycles, [
+    int n = 60,
+  ]) => List.generate(n + 1, (i) {
+    final t = i / n;
+    return Offset(x1 + (x2 - x1) * t, cy + amp * sin(2 * pi * cycles * t));
+  });
 
   /// Outward spiral (loop pattern), starting at the centre.
-  static List<Offset> _spiral(double cx, double cy, double rMax,
-      double turns,
-      [int n = 90]) =>
-      List.generate(n + 1, (i) {
-        final t = i / n;
-        final a = 2 * pi * turns * t - pi / 2;
-        final r = rMax * t;
-        return Offset(cx + r * cos(a), cy + r * sin(a));
-      });
+  static List<Offset> _spiral(
+    double cx,
+    double cy,
+    double rMax,
+    double turns, [
+    int n = 90,
+  ]) => List.generate(n + 1, (i) {
+    final t = i / n;
+    final a = 2 * pi * turns * t - pi / 2;
+    final r = rMax * t;
+    return Offset(cx + r * cos(a), cy + r * sin(a));
+  });
 
   /// Classic heart curve, sampled as one closed stroke starting at the
   /// bottom tip.
-  static List<Offset> _heart(double cx, double cy, double scale,
-      [int n = 60]) {
+  static List<Offset> _heart(double cx, double cy, double scale, [int n = 60]) {
     final pts = <Offset>[];
     for (int i = 0; i <= n; i++) {
       // Start at the bottom point (t = -pi) and go all the way round.
       final t = -pi + 2 * pi * i / n;
       final x = 16 * pow(sin(t), 3).toDouble();
-      final y = 13 * cos(t) -
-          5 * cos(2 * t) -
-          2 * cos(3 * t) -
-          cos(4 * t);
+      final y = 13 * cos(t) - 5 * cos(2 * t) - 2 * cos(3 * t) - cos(4 * t);
       // Normalise: x ∈ [-16,16], y ∈ [-17,12]; y is up in the formula.
       pts.add(Offset(cx + scale * x / 16, cy - scale * y / 15));
     }
@@ -165,10 +175,7 @@ class LetterStrokes {
       _ln(.35, .85, .65, .85),
     ],
     'J': [
-      _cat([
-        _ln(.62, .15, .62, .65),
-        _arc(.47, .65, .15, .2, 0, 140, 14),
-      ]),
+      _cat([_ln(.62, .15, .62, .65), _arc(.47, .65, .15, .2, 0, 140, 14)]),
       _ln(.44, .15, .8, .15),
     ],
     'K': [
@@ -176,10 +183,7 @@ class LetterStrokes {
       _ln(.72, .15, .27, .52),
       _ln(.42, .42, .75, .85),
     ],
-    'L': [
-      _ln(.28, .15, .28, .85),
-      _ln(.28, .85, .74, .85),
-    ],
+    'L': [_ln(.28, .15, .28, .85), _ln(.28, .85, .74, .85)],
     'M': [
       _ln(.2, .15, .2, .85),
       _ln(.2, .15, .5, .6),
@@ -200,10 +204,7 @@ class LetterStrokes {
         _ln(.5, .51, .28, .51, 6),
       ]),
     ],
-    'Q': [
-      _arc(.5, .48, .3, .33, -90, 270, 36),
-      _ln(.58, .62, .78, .85),
-    ],
+    'Q': [_arc(.5, .48, .3, .33, -90, 270, 36), _ln(.58, .62, .78, .85)],
     'R': [
       _ln(.28, .15, .28, .85),
       _cat([
@@ -219,10 +220,7 @@ class LetterStrokes {
         _arc(.5, .67, .22, .18, -90, 150, 24),
       ]),
     ],
-    'T': [
-      _ln(.22, .15, .78, .15),
-      _ln(.5, .15, .5, .85),
-    ],
+    'T': [_ln(.22, .15, .78, .15), _ln(.5, .15, .5, .85)],
     'U': [
       // Bowl sweeps 180→90→0 (screen coords: y down) so it bulges DOWN.
       _cat([
@@ -231,25 +229,15 @@ class LetterStrokes {
         _ln(.75, .6, .75, .15),
       ]),
     ],
-    'V': [
-      _ln(.22, .15, .5, .85),
-      _ln(.5, .85, .78, .15),
-    ],
+    'V': [_ln(.22, .15, .5, .85), _ln(.5, .85, .78, .15)],
     'W': [
       _ln(.18, .15, .35, .85),
       _ln(.35, .85, .5, .35),
       _ln(.5, .35, .65, .85),
       _ln(.65, .85, .82, .15),
     ],
-    'X': [
-      _ln(.25, .15, .75, .85),
-      _ln(.75, .15, .25, .85),
-    ],
-    'Y': [
-      _ln(.25, .15, .5, .5),
-      _ln(.75, .15, .5, .5),
-      _ln(.5, .5, .5, .85),
-    ],
+    'X': [_ln(.25, .15, .75, .85), _ln(.75, .15, .25, .85)],
+    'Y': [_ln(.25, .15, .5, .5), _ln(.75, .15, .5, .5), _ln(.5, .5, .5, .85)],
     'Z': [
       _cat([
         _ln(.25, .15, .75, .15),
@@ -259,19 +247,10 @@ class LetterStrokes {
     ],
 
     // Lowercase --------------------------------------------------------------
-    'a': [
-      _arc(.45, .63, .18, .21, -30, -330, 28),
-      _ln(.63, .42, .63, .85),
-    ],
-    'b': [
-      _ln(.3, .15, .3, .85),
-      _arc(.48, .64, .18, .21, -140, 140, 26),
-    ],
+    'a': [_arc(.45, .63, .18, .21, -30, -330, 28), _ln(.63, .42, .63, .85)],
+    'b': [_ln(.3, .15, .3, .85), _arc(.48, .64, .18, .21, -140, 140, 26)],
     'c': [_arc(.5, .63, .19, .21, -50, -310, 28)],
-    'd': [
-      _arc(.48, .63, .18, .21, -40, -320, 28),
-      _ln(.66, .15, .66, .85),
-    ],
+    'd': [_arc(.48, .63, .18, .21, -40, -320, 28), _ln(.66, .15, .66, .85)],
     'e': [
       _cat([
         _ln(.32, .63, .66, .63, 10),
@@ -279,35 +258,20 @@ class LetterStrokes {
       ]),
     ],
     'f': [
-      _cat([
-        _arc(.63, .3, .15, .15, -40, -180, 12),
-        _ln(.48, .3, .48, .85),
-      ]),
+      _cat([_arc(.63, .3, .15, .15, -40, -180, 12), _ln(.48, .3, .48, .85)]),
       _ln(.34, .45, .62, .45),
     ],
     'g': [
       _arc(.46, .6, .18, .2, -30, -330, 28),
-      _cat([
-        _ln(.64, .42, .64, .85),
-        _arc(.46, .85, .18, .13, 0, 150, 12),
-      ]),
+      _cat([_ln(.64, .42, .64, .85), _arc(.46, .85, .18, .13, 0, 150, 12)]),
     ],
     'h': [
       _ln(.3, .15, .3, .85),
-      _cat([
-        _arc(.48, .62, .18, .2, -180, 0, 18),
-        _ln(.66, .62, .66, .85, 8),
-      ]),
+      _cat([_arc(.48, .62, .18, .2, -180, 0, 18), _ln(.66, .62, .66, .85, 8)]),
     ],
-    'i': [
-      _ln(.5, .42, .5, .85),
-      _arc(.5, .28, .025, .025, -90, 269, 10),
-    ],
+    'i': [_ln(.5, .42, .5, .85), _arc(.5, .28, .025, .025, -90, 269, 10)],
     'j': [
-      _cat([
-        _ln(.55, .42, .55, .85),
-        _arc(.4, .85, .15, .13, 0, 130, 10),
-      ]),
+      _cat([_ln(.55, .42, .55, .85), _arc(.4, .85, .15, .13, 0, 130, 10)]),
       _arc(.55, .28, .025, .025, -90, 269, 10),
     ],
     'k': [
@@ -318,35 +282,17 @@ class LetterStrokes {
     'l': [_ln(.5, .15, .5, .85)],
     'm': [
       _ln(.28, .42, .28, .85),
-      _cat([
-        _arc(.39, .56, .11, .14, -180, 0, 12),
-        _ln(.5, .56, .5, .85, 8),
-      ]),
-      _cat([
-        _arc(.61, .56, .11, .14, -180, 0, 12),
-        _ln(.72, .56, .72, .85, 8),
-      ]),
+      _cat([_arc(.39, .56, .11, .14, -180, 0, 12), _ln(.5, .56, .5, .85, 8)]),
+      _cat([_arc(.61, .56, .11, .14, -180, 0, 12), _ln(.72, .56, .72, .85, 8)]),
     ],
     'n': [
       _ln(.32, .42, .32, .85),
-      _cat([
-        _arc(.49, .57, .17, .15, -180, 0, 14),
-        _ln(.66, .57, .66, .85, 8),
-      ]),
+      _cat([_arc(.49, .57, .17, .15, -180, 0, 14), _ln(.66, .57, .66, .85, 8)]),
     ],
     'o': [_arc(.5, .63, .19, .21, -90, 270, 30)],
-    'p': [
-      _ln(.32, .42, .32, .98),
-      _arc(.5, .63, .18, .2, -140, 140, 26),
-    ],
-    'q': [
-      _arc(.46, .63, .18, .2, -40, -320, 26),
-      _ln(.64, .42, .64, .98),
-    ],
-    'r': [
-      _ln(.35, .42, .35, .85),
-      _arc(.5, .6, .15, .17, -180, -20, 14),
-    ],
+    'p': [_ln(.32, .42, .32, .98), _arc(.5, .63, .18, .2, -140, 140, 26)],
+    'q': [_arc(.46, .63, .18, .2, -40, -320, 26), _ln(.64, .42, .64, .98)],
+    'r': [_ln(.35, .42, .35, .85), _arc(.5, .6, .15, .17, -180, -20, 14)],
     's': [
       _cat([
         _arc(.5, .53, .14, .11, -30, -270, 16),
@@ -354,10 +300,7 @@ class LetterStrokes {
       ]),
     ],
     't': [
-      _cat([
-        _ln(.48, .2, .48, .75),
-        _arc(.6, .75, .12, .1, 180, 90, 8),
-      ]),
+      _cat([_ln(.48, .2, .48, .75), _arc(.6, .75, .12, .1, 180, 90, 8)]),
       _ln(.32, .42, .68, .42),
     ],
     'u': [
@@ -370,24 +313,15 @@ class LetterStrokes {
       // …then the right stem down to the baseline.
       _ln(.66, .42, .66, .85),
     ],
-    'v': [
-      _ln(.32, .42, .5, .85),
-      _ln(.5, .85, .68, .42),
-    ],
+    'v': [_ln(.32, .42, .5, .85), _ln(.5, .85, .68, .42)],
     'w': [
       _ln(.28, .42, .39, .85),
       _ln(.39, .85, .5, .5),
       _ln(.5, .5, .61, .85),
       _ln(.61, .85, .72, .42),
     ],
-    'x': [
-      _ln(.32, .42, .68, .85),
-      _ln(.68, .42, .32, .85),
-    ],
-    'y': [
-      _ln(.32, .42, .5, .78),
-      _ln(.68, .42, .42, .98),
-    ],
+    'x': [_ln(.32, .42, .68, .85), _ln(.68, .42, .32, .85)],
+    'y': [_ln(.32, .42, .5, .78), _ln(.68, .42, .42, .98)],
     'z': [
       _cat([
         _ln(.32, .42, .68, .42),
@@ -438,10 +372,7 @@ class LetterStrokes {
       _arc(.5, .33, .18, .17, -90, 268, 26),
       _arc(.5, .68, .21, .18, -90, 268, 26),
     ],
-    '9': [
-      _arc(.48, .35, .19, .19, -20, -340, 26),
-      _ln(.67, .36, .6, .85),
-    ],
+    '9': [_arc(.48, .35, .19, .19, -20, -340, 26), _ln(.67, .36, .6, .85)],
 
     // Shapes -----------------------------------------------------------------
     // Simple, closed outlines a small child can trace in one motion.
@@ -480,10 +411,7 @@ class LetterStrokes {
     '⬭': [_arc(.5, .5, .38, .26, -90, 270, 40)],
     '☆': [_star(.5, .52, .37, .155)],
     '♡': [_heart(.5, .5, .38)],
-    '✚': [
-      _ln(.5, .16, .5, .84),
-      _ln(.16, .5, .84, .5),
-    ],
+    '✚': [_ln(.5, .16, .5, .84), _ln(.16, .5, .84, .5)],
 
     // Pre-writing lines -------------------------------------------------------
     // The basic strokes children practise before shapes and letters.

@@ -1,0 +1,18 @@
+# Where the signing certificate and provisioning profile live.
+#
+# The repo below holds them AES-encrypted with MATCH_PASSWORD — the contents
+# are useless without it, but it should still be a *private* repo. Nothing in
+# it is ever edited by hand; `fastlane match appstore` writes it.
+
+# HTTPS by default so a local run uses the git credential you already have.
+# CI overrides MATCH_GIT_URL with the SSH form and authenticates with a
+# read-only deploy key instead.
+git_url(ENV["MATCH_GIT_URL"] || "https://github.com/athulsethumadhavan/kidwrite-certificates.git")
+storage_mode("git")
+
+type("appstore")
+app_identifier(["com.atsIOSDev.kidWrite"])
+
+# CI must only ever read. Creating a certificate from a runner burns one of the
+# three Apple allows and leaves it on a machine that is about to be destroyed.
+readonly(ENV["CI"] ? true : false)

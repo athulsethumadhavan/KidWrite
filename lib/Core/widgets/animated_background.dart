@@ -1,16 +1,12 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
+import '../Constants/app_colors.dart';
 
 class AnimatedBackground extends StatefulWidget {
   final Widget child;
   final Color? primaryColor;
 
-  const AnimatedBackground({
-    super.key,
-    required this.child,
-    this.primaryColor,
-  });
+  const AnimatedBackground({super.key, required this.child, this.primaryColor});
 
   @override
   State<AnimatedBackground> createState() => _AnimatedBackgroundState();
@@ -90,7 +86,7 @@ class _AnimatedBackgroundState extends State<AnimatedBackground>
 }
 
 class _Bubble {
-  final double x;      // 0..1 fractional
+  final double x; // 0..1 fractional
   final double startY; // 0..1 fractional
   final double radius;
   final double speed;
@@ -147,7 +143,8 @@ class _BubblePainter extends CustomPainter {
 
       final t = (progress * bubble.speed + bubble.startY) % 1.0;
       final y = size.height * (1.0 - t);
-      final x = size.width * bubble.x +
+      final x =
+          size.width * bubble.x +
           sin(progress * 2 * pi + bubble.startY * 10) * 20;
       final r = bubble.radius * (1 + pulseProgress * 0.1);
 

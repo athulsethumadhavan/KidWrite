@@ -34,28 +34,32 @@ class _OnboardingPageState extends State<OnboardingPage> {
     _OnboardStep(
       emoji: '✏️',
       title: 'Welcome to KidWrite!',
-      body: 'A fun way for little ones to learn writing — starting with '
+      body:
+          'A fun way for little ones to learn writing — starting with '
           'lines and shapes, then numbers and letters in four languages.',
       color: AppColors.primary,
     ),
     _OnboardStep(
       emoji: '👆',
       title: 'Follow the hand',
-      body: 'A friendly hand shows exactly how each stroke is drawn. Your '
+      body:
+          'A friendly hand shows exactly how each stroke is drawn. Your '
           'child traces along the dotted line with a finger.',
       color: AppColors.secondary,
     ),
     _OnboardStep(
       emoji: '⭐️',
       title: 'Earn three stars',
-      body: 'Trace it twice with the guide, then once from memory. Three '
+      body:
+          'Trace it twice with the guide, then once from memory. Three '
           'stars unlock the next letter on the map!',
       color: Color(0xFFFFB300),
     ),
     _OnboardStep(
       emoji: '🔒',
       title: 'Grown-ups only',
-      body: 'Settings — ratings, help and privacy — are behind a LONG PRESS '
+      body:
+          'Settings — ratings, help and privacy — are behind a LONG PRESS '
           'on the gear icon, so little fingers can\'t wander off.',
       color: AppColors.purple,
     ),
@@ -104,21 +108,21 @@ class _OnboardingPageState extends State<OnboardingPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Container(
-                            width: 150,
-                            height: 150,
-                            decoration: BoxDecoration(
-                              color: p.color.withValues(alpha: 0.15),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(p.emoji,
-                                  style: const TextStyle(fontSize: 76)),
-                            ),
-                          )
+                                width: 150,
+                                height: 150,
+                                decoration: BoxDecoration(
+                                  color: p.color.withValues(alpha: 0.15),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    p.emoji,
+                                    style: const TextStyle(fontSize: 76),
+                                  ),
+                                ),
+                              )
                               .animate(key: ValueKey(i))
-                              .scale(
-                              duration: 500.ms,
-                              curve: Curves.elasticOut)
+                              .scale(duration: 500.ms, curve: Curves.elasticOut)
                               .fadeIn(duration: 300.ms),
                           const SizedBox(height: 36),
                           Text(

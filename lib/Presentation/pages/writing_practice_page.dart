@@ -9,14 +9,14 @@ import 'package:kid_write/Core/Constants/app_constants.dart';
 import 'package:kid_write/Core/services/letter_audio_service.dart';
 import 'package:kid_write/Core/services/review_prompt_service.dart';
 
-import '../../core/constants/app_colors.dart';
+import '../../Core/Constants/app_colors.dart';
 import 'package:kid_write/Core/data/letter_words.dart';
-import '../../core/utils/responsive_helper.dart';
-import '../../core/widgets/animated_background.dart';
+import '../../Core/utils/responsive_helper.dart';
+import '../../Core/widgets/animated_background.dart';
 import '../../domain/entities/character.dart';
 import '../../domain/usecases/get_progress.dart';
 import '../../injection_container.dart';
-import '../blocs/music/music_bloc.dart';
+import '../blocs/Music/music_bloc.dart';
 import '../blocs/progress/progress_bloc.dart';
 import '../blocs/writing/writing_bloc.dart';
 import '../widgets/drawing_canvas.dart';
@@ -75,11 +75,9 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
   @override
   void initState() {
     super.initState();
-    _confetti = ConfettiController(
-        duration: AppConstants.celebrationDuration);
+    _confetti = ConfettiController(duration: AppConstants.celebrationDuration);
     _writingBloc = sl<WritingBloc>();
-    _progressBloc = sl<ProgressBloc>()
-      ..add(ProgressLoad(widget.languageId));
+    _progressBloc = sl<ProgressBloc>()..add(ProgressLoad(widget.languageId));
     // Two stars already earned → the 3rd is the free-draw challenge:
     // no hand, no dots, and strokes may be drawn in any order.
     _startCharacter();
@@ -102,15 +100,15 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
 
   /// Big star pops at the canvas, then flies up into star slot [index].
   void _launchStarFly(int index) {
-    final stackBox =
-    _stackKey.currentContext?.findRenderObject() as RenderBox?;
+    final stackBox = _stackKey.currentContext?.findRenderObject() as RenderBox?;
     if (stackBox == null) return;
     final size = stackBox.size;
     final slotBox =
-    _starKeys[index].currentContext?.findRenderObject() as RenderBox?;
+        _starKeys[index].currentContext?.findRenderObject() as RenderBox?;
     final to = slotBox != null
         ? stackBox.globalToLocal(
-        slotBox.localToGlobal(slotBox.size.center(Offset.zero)))
+            slotBox.localToGlobal(slotBox.size.center(Offset.zero)),
+          )
         : Offset(size.width / 2, 60);
     setState(() {
       _flyFrom = Offset(size.width / 2, size.height * 0.55);
@@ -217,21 +215,21 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
                 children: [
                   isTablet
                       ? _TabletLayout(
-                    character: widget.character,
-                    languageId: widget.languageId,
-                    langColor: _langColor,
-                    starKeys: _starKeys,
-                    hiddenStar: _showFlyStar ? _flyTargetIndex : null,
-                    onSpeak: _speakAloud,
-                  )
+                          character: widget.character,
+                          languageId: widget.languageId,
+                          langColor: _langColor,
+                          starKeys: _starKeys,
+                          hiddenStar: _showFlyStar ? _flyTargetIndex : null,
+                          onSpeak: _speakAloud,
+                        )
                       : _PhoneLayout(
-                    character: widget.character,
-                    languageId: widget.languageId,
-                    langColor: _langColor,
-                    starKeys: _starKeys,
-                    hiddenStar: _showFlyStar ? _flyTargetIndex : null,
-                    onSpeak: _speakAloud,
-                  ),
+                          character: widget.character,
+                          languageId: widget.languageId,
+                          langColor: _langColor,
+                          starKeys: _starKeys,
+                          hiddenStar: _showFlyStar ? _flyTargetIndex : null,
+                          onSpeak: _speakAloud,
+                        ),
 
                   // Big star flying up into the star row.
                   if (_showFlyStar)
@@ -250,8 +248,7 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
                     alignment: Alignment.topCenter,
                     child: ConfettiWidget(
                       confettiController: _confetti,
-                      blastDirectionality:
-                      BlastDirectionality.explosive,
+                      blastDirectionality: BlastDirectionality.explosive,
                       numberOfParticles: 30,
                       colors: const [
                         AppColors.primary,
@@ -290,12 +287,14 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
           ? (ps.progressMap[widget.character.id]?.successCount ?? 0)
           : 0;
 
-      _progressBloc.add(ProgressRecord(
-        characterId: widget.character.id,
-        languageId: widget.languageId,
-        success: true,
-        accuracy: state.accuracy,
-      ));
+      _progressBloc.add(
+        ProgressRecord(
+          characterId: widget.character.id,
+          languageId: widget.languageId,
+          success: true,
+          accuracy: state.accuracy,
+        ),
+      );
 
       _launchStarFly(prior.clamp(0, 2).toInt());
 
@@ -312,7 +311,9 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
           if (!mounted) return;
           // With a reward card the word is spoken instead, so the two
           // voices never talk over each other.
-          if (reward == null) sl<LetterAudioService>().playLetter(widget.character);
+          if (reward == null) {
+            sl<LetterAudioService>().playLetter(widget.character);
+          }
         });
 
         // Count the level and, every few levels, ask for a review —
@@ -342,16 +343,17 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
         _showReward(reward, then: nextAttempt);
       } else if (starsNow < 3) {
         _redrawTimer?.cancel();
-        _redrawTimer =
-            Timer(const Duration(milliseconds: 1700), nextAttempt);
+        _redrawTimer = Timer(const Duration(milliseconds: 1700), nextAttempt);
       }
     } else if (state.status == WritingStatus.failure) {
-      _progressBloc.add(ProgressRecord(
-        characterId: widget.character.id,
-        languageId: widget.languageId,
-        success: false,
-        accuracy: state.accuracy,
-      ));
+      _progressBloc.add(
+        ProgressRecord(
+          characterId: widget.character.id,
+          languageId: widget.languageId,
+          success: false,
+          accuracy: state.accuracy,
+        ),
+      );
     }
   }
 }
@@ -386,16 +388,16 @@ class _PhoneLayout extends StatelessWidget {
         _TopBar(character: character, languageId: languageId),
         const SizedBox(height: 8),
         _CharacterInfo(
-            character: character,
-            langColor: langColor,
-            starKeys: starKeys,
-            hiddenStar: hiddenStar,
-            onSpeak: onSpeak),
+          character: character,
+          langColor: langColor,
+          starKeys: starKeys,
+          hiddenStar: hiddenStar,
+          onSpeak: onSpeak,
+        ),
         const SizedBox(height: 16),
         Expanded(
           child: Center(
-            child: _CanvasSection(
-                character: character, langColor: langColor),
+            child: _CanvasSection(character: character, langColor: langColor),
           ),
         ),
         _BottomControls(langColor: langColor, character: character),
@@ -446,13 +448,17 @@ class _TabletLayout extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       _CharacterInfo(
-                          character: character,
-                          langColor: langColor,
-                          starKeys: starKeys,
-                          hiddenStar: hiddenStar,
-                          onSpeak: onSpeak),
+                        character: character,
+                        langColor: langColor,
+                        starKeys: starKeys,
+                        hiddenStar: hiddenStar,
+                        onSpeak: onSpeak,
+                      ),
                       const SizedBox(height: 32),
-                      _BottomControls(langColor: langColor, character: character),
+                      _BottomControls(
+                        langColor: langColor,
+                        character: character,
+                      ),
                     ],
                   ),
                 ),
@@ -462,7 +468,9 @@ class _TabletLayout extends StatelessWidget {
                 flex: 3,
                 child: Center(
                   child: _CanvasSection(
-                      character: character, langColor: langColor),
+                    character: character,
+                    langColor: langColor,
+                  ),
                 ),
               ),
             ],
@@ -543,43 +551,43 @@ class _CharacterInfo extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Column(
-                children: [
-                  // The letter being drawn — not its English name, so the
-                  // child sees the same shape they are tracing.
-                  Text(
-                    character.symbol,
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontFamily: fontFamilyFor(character.languageId),
-                      fontWeight: FontWeight.w700,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Column(
+                  children: [
+                    // The letter being drawn — not its English name, so the
+                    // child sees the same shape they are tracing.
+                    Text(
+                      character.symbol,
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontFamily: fontFamilyFor(character.languageId),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                  Text(
-                    '"${character.pronunciation}"',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: langColor,
-                      fontStyle: FontStyle.italic,
+                    Text(
+                      '"${character.pronunciation}"',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: langColor,
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
+                  ],
+                ),
+                const SizedBox(width: 12),
+                // Just the affordance now — the tap is handled by the pill.
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: langColor.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
                   ),
-                ],
-              ),
-              const SizedBox(width: 12),
-              // Just the affordance now — the tap is handled by the pill.
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: langColor.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
+                  child: Icon(
+                    Icons.volume_up_rounded,
+                    color: langColor,
+                    size: 26,
+                  ),
                 ),
-                child: Icon(
-                  Icons.volume_up_rounded,
-                  color: langColor,
-                  size: 26,
-                ),
-              ),
               ],
             ),
           ),
@@ -589,8 +597,7 @@ class _CharacterInfo extends StatelessWidget {
         BlocBuilder<ProgressBloc, ProgressState>(
           builder: (_, ps) {
             final stars = ps is ProgressLoaded
-                ? (ps.progressMap[character.id]?.successCount ?? 0)
-                .clamp(0, 3)
+                ? (ps.progressMap[character.id]?.successCount ?? 0).clamp(0, 3)
                 : 0;
             return Row(
               mainAxisSize: MainAxisSize.min,
@@ -613,7 +620,8 @@ class _CharacterInfo extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         BlocBuilder<WritingBloc, WritingState>(
-          builder: (_, state) => _StatusBadge(state: state, langColor: langColor),
+          builder: (_, state) =>
+              _StatusBadge(state: state, langColor: langColor),
         ),
       ],
     );
@@ -639,11 +647,14 @@ class _StatusBadge extends StatelessWidget {
           children: [
             Icon(Icons.star_rounded, color: Colors.white, size: 20),
             SizedBox(width: 6),
-            Text('Great job! ⭐',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16)),
+            Text(
+              'Great job! ⭐',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+              ),
+            ),
           ],
         ),
       ).animate().scale(duration: 400.ms, curve: Curves.elasticOut);
@@ -658,9 +669,10 @@ class _StatusBadge extends StatelessWidget {
         child: const Text(
           'Try again! You can do it 💪',
           style: TextStyle(
-              color: AppColors.orange,
-              fontWeight: FontWeight.w700,
-              fontSize: 15),
+            color: AppColors.orange,
+            fontWeight: FontWeight.w700,
+            fontSize: 15,
+          ),
         ),
       );
     }
@@ -672,13 +684,18 @@ class _StatusBadge extends StatelessWidget {
             width: 18,
             height: 18,
             child: CircularProgressIndicator(
-                strokeWidth: 2.5, color: langColor),
+              strokeWidth: 2.5,
+              color: langColor,
+            ),
           ),
           const SizedBox(width: 10),
           Text(
             'Checking your trace…',
             style: TextStyle(
-                color: langColor, fontWeight: FontWeight.w600, fontSize: 15),
+              color: langColor,
+              fontWeight: FontWeight.w600,
+              fontSize: 15,
+            ),
           ),
         ],
       );
@@ -694,32 +711,41 @@ class _StatusBadge extends StatelessWidget {
               : 'Keep going — fill in the whole letter! 💪',
           textAlign: TextAlign.center,
           style: TextStyle(
-              color: langColor, fontWeight: FontWeight.w700, fontSize: 15),
+            color: langColor,
+            fontWeight: FontWeight.w700,
+            fontSize: 15,
+          ),
         );
       }
       if (state.strokeMissed) {
-        return Text(
+        return const Text(
           'Oops! Watch the hand and try again 💪',
           style: TextStyle(
-              color: AppColors.orange,
-              fontWeight: FontWeight.w700,
-              fontSize: 15),
+            color: AppColors.orange,
+            fontWeight: FontWeight.w700,
+            fontSize: 15,
+          ),
         );
       }
       return Text(
         'Stroke ${state.targetStrokeIndex + 1} of '
-            '${state.guideStrokes.length} — follow the hand! 👆',
+        '${state.guideStrokes.length} — follow the hand! 👆',
         style: TextStyle(
-            color: langColor, fontWeight: FontWeight.w600, fontSize: 15),
+          color: langColor,
+          fontWeight: FontWeight.w600,
+          fontSize: 15,
+        ),
       );
     }
     if (state.status == WritingStatus.drawing ||
-        (state.strokes.isNotEmpty &&
-            state.status == WritingStatus.idle)) {
+        (state.strokes.isNotEmpty && state.status == WritingStatus.idle)) {
       return Text(
         'Tap "Done!" when you finish ✏️',
         style: TextStyle(
-            color: langColor, fontWeight: FontWeight.w600, fontSize: 15),
+          color: langColor,
+          fontWeight: FontWeight.w600,
+          fontSize: 15,
+        ),
       );
     }
     return Text(
@@ -752,8 +778,8 @@ class _CanvasSection extends StatelessWidget {
         // measuring) — tune via AppConstants.inkWidthFactor.
         strokeWidth: state.glyphStrokeWidth > 0
             ? (state.glyphStrokeWidth * size * AppConstants.inkWidthFactor)
-            .clamp(12.0, size * 0.14)
-            .toDouble()
+                  .clamp(12.0, size * 0.14)
+                  .toDouble()
             : AppConstants.strokeWidth,
         guideStrokes: state.guideStrokes,
         shapeStrokes: state.shapeStrokes,
@@ -761,7 +787,8 @@ class _CanvasSection extends StatelessWidget {
         showGuideDots: !state.freeDraw,
         // Hand demo shows while waiting for the child to draw; hides while
         // drawing and after success.
-        showHand: !state.freeDraw &&
+        showHand:
+            !state.freeDraw &&
             state.isGuided &&
             state.status != WritingStatus.drawing &&
             state.status != WritingStatus.success,
@@ -772,9 +799,7 @@ class _CanvasSection extends StatelessWidget {
         onStrokeEnd: () {
           // Guided mode validates the stroke immediately; free mode just
           // records it until the kid taps "Done ✓".
-          context
-              .read<WritingBloc>()
-              .add(WritingStrokeEnded(Size(size, size)));
+          context.read<WritingBloc>().add(WritingStrokeEnded(Size(size, size)));
         },
       ),
     );
@@ -824,11 +849,11 @@ class _BottomControls extends StatelessWidget {
                   onTap: state.status == WritingStatus.checking
                       ? () {} // no-op while async check runs
                       : () {
-                    final size = ResponsiveHelper.canvasSize(context);
-                    context.read<WritingBloc>().add(
-                      WritingCheckAccuracy(Size(size, size)),
-                    );
-                  },
+                          final size = ResponsiveHelper.canvasSize(context);
+                          context.read<WritingBloc>().add(
+                            WritingCheckAccuracy(Size(size, size)),
+                          );
+                        },
                 ),
 
               // Next → back to the map, but only once all 3 stars are in
@@ -837,8 +862,7 @@ class _BottomControls extends StatelessWidget {
                 BlocBuilder<ProgressBloc, ProgressState>(
                   builder: (context, ps) {
                     final stars = ps is ProgressLoaded
-                        ? (ps.progressMap[character.id]?.successCount ??
-                        0)
+                        ? (ps.progressMap[character.id]?.successCount ?? 0)
                         : 0;
                     if (stars < 3) return const SizedBox.shrink();
                     return _ControlButton(
@@ -934,8 +958,9 @@ class _FlyingStar extends StatelessWidget {
             // Phase 1 (0–0.35): star pops in at the canvas.
             // Phase 2 (0.35–1): star flies to the row while shrinking.
             final popT = (t / 0.35).clamp(0.0, 1.0);
-            final moveT = Curves.easeInOutCubic
-                .transform(((t - 0.35) / 0.65).clamp(0.0, 1.0));
+            final moveT = Curves.easeInOutCubic.transform(
+              ((t - 0.35) / 0.65).clamp(0.0, 1.0),
+            );
             final pos = Offset.lerp(from, to, moveT)!;
             final scale = t < 0.35
                 ? Curves.elasticOut.transform(popT)
@@ -951,9 +976,7 @@ class _FlyingStar extends StatelessWidget {
                       Icons.star_rounded,
                       size: starSize,
                       color: Color(0xFFFFB300),
-                      shadows: [
-                        Shadow(color: Colors.black38, blurRadius: 16),
-                      ],
+                      shadows: [Shadow(color: Colors.black38, blurRadius: 16)],
                     ),
                   ),
                 ),

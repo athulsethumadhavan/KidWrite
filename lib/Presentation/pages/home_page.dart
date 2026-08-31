@@ -8,13 +8,13 @@ import 'package:kid_write/Core/services/review_prompt_service.dart';
 import 'package:kid_write/Core/services/update_checker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../core/constants/app_colors.dart';
-import '../../core/utils/responsive_helper.dart';
-import '../../core/widgets/animated_background.dart';
+import '../../Core/Constants/app_colors.dart';
+import '../../Core/utils/responsive_helper.dart';
+import '../../Core/widgets/animated_background.dart';
 import '../../domain/entities/language.dart';
 import '../../injection_container.dart';
 import '../blocs/home/home_bloc.dart';
-import '../blocs/music/music_bloc.dart';
+import '../blocs/Music/music_bloc.dart';
 import '../widgets/language_card.dart';
 import '../widgets/music_toggle_button.dart';
 import '../widgets/scroll_under_header.dart';
@@ -93,8 +93,7 @@ class _HomeView extends StatelessWidget {
                     if (await review.isAvailable()) {
                       await review.requestReview();
                     } else {
-                      await review.openStoreListing(
-                          appStoreId: _appStoreId);
+                      await review.openStoreListing(appStoreId: _appStoreId);
                     }
                   } catch (_) {}
                 },
@@ -141,8 +140,7 @@ class _HomeView extends StatelessWidget {
                 icon: Icons.info_rounded,
                 iconColor: AppColors.purple,
                 title: 'About',
-                subtitle:
-                'KidWrite v${AppConstants.appVersion}',
+                subtitle: 'KidWrite v${AppConstants.appVersion}',
                 onTap: () {
                   Navigator.pop(sheetContext);
                   showAboutDialog(
@@ -156,9 +154,9 @@ class _HomeView extends StatelessWidget {
                     children: const [
                       Text(
                         'A fun tracing app that helps children below 6 '
-                            'learn to write letters and numbers in English, '
-                            'Malayalam, Hindi and Tamil.\n\n'
-                            'Made with ❤️ for little writers.',
+                        'learn to write letters and numbers in English, '
+                        'Malayalam, Hindi and Tamil.\n\n'
+                        'Made with ❤️ for little writers.',
                       ),
                     ],
                   );
@@ -175,30 +173,28 @@ class _HomeView extends StatelessWidget {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: const Text('🔒 Privacy Policy'),
-        content: SingleChildScrollView(
+        content: const SingleChildScrollView(
           child: Text(
             'KidWrite is a child-safe writing practice app for children '
-                'under 6.\n\n'
-                'WHAT WE COLLECT\n'
-                'Nothing. KidWrite does not collect, transmit or share any '
-                'personal information. The app works completely offline. We '
-                'never collect names, contact details, device identifiers, '
-                'location, photos, microphone input, or analytics.\n\n'
-                'DATA ON YOUR DEVICE\n'
-                'Only writing progress is stored (letters practiced, '
-                'accuracy scores, music preference), using your device\'s '
-                'standard local storage. It never leaves the device. '
-                'Uninstalling the app permanently deletes it.\n\n'
-                'INTERNET\n'
-                'KidWrite does not require an internet connection and shows '
-                'no ads.\n\n'
-                'CONTACT\n'
-                'Questions? Email $_supportEmail',
-            style: const TextStyle(fontSize: 14, height: 1.45),
+            'under 6.\n\n'
+            'WHAT WE COLLECT\n'
+            'Nothing. KidWrite does not collect, transmit or share any '
+            'personal information. The app works completely offline. We '
+            'never collect names, contact details, device identifiers, '
+            'location, photos, microphone input, or analytics.\n\n'
+            'DATA ON YOUR DEVICE\n'
+            'Only writing progress is stored (letters practiced, '
+            'accuracy scores, music preference), using your device\'s '
+            'standard local storage. It never leaves the device. '
+            'Uninstalling the app permanently deletes it.\n\n'
+            'INTERNET\n'
+            'KidWrite does not require an internet connection and shows '
+            'no ads.\n\n'
+            'CONTACT\n'
+            'Questions? Email $_supportEmail',
+            style: TextStyle(fontSize: 14, height: 1.45),
           ),
         ),
         actions: [
@@ -223,91 +219,89 @@ class _HomeView extends StatelessWidget {
         // bar, iOS-style. The header carries the top inset itself.
         child: ScrollUnderHeader(
           header: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  24,
-                  20 + MediaQuery.paddingOf(context).top,
-                  20,
-                  8,
+            padding: EdgeInsets.fromLTRB(
+              24,
+              20 + MediaQuery.paddingOf(context).top,
+              20,
+              8,
+            ),
+            child: Row(
+              // Icons pin to the TOP so they sit beside the greeting
+              // line instead of floating next to the tall title.
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Hello! 👋',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: AppColors.textLight,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      // FittedBox scales the text down if space is
+                      // tight, so the title is ALWAYS exactly 2 lines.
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'What do you want\nto practice today?',
+                          style: theme.textTheme.headlineLarge?.copyWith(
+                            color: AppColors.textDark,
+                            height: 1.2,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Row(
-                  // Icons pin to the TOP so they sit beside the greeting
-                  // line instead of floating next to the tall title.
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Hello! 👋',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: AppColors.textLight,
-                            ),
+                const SizedBox(width: 12),
+                BlocBuilder<MusicBloc, MusicState>(
+                  bloc: sl<MusicBloc>(),
+                  builder: (_, state) => MusicToggleButton(
+                    isEnabled: state.isMusicEnabled,
+                    onTap: () => sl<MusicBloc>().add(const MusicToggle()),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Settings: rating / support / privacy / about.
+                // LONG PRESS only — keeps little fingers out (and is
+                // explained during onboarding).
+                GestureDetector(
+                  onLongPress: () => _showSettingsSheet(context),
+                  onTap: () {
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(
+                        const SnackBar(
+                          behavior: SnackBarBehavior.floating,
+                          duration: Duration(seconds: 2),
+                          content: Text(
+                            'Grown-ups: press and hold to open settings',
                           ),
-                          const SizedBox(height: 2),
-                          // FittedBox scales the text down if space is
-                          // tight, so the title is ALWAYS exactly 2 lines.
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'What do you want\nto practice today?',
-                              style:
-                              theme.textTheme.headlineLarge?.copyWith(
-                                color: AppColors.textDark,
-                                height: 1.2,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    BlocBuilder<MusicBloc, MusicState>(
-                      bloc: sl<MusicBloc>(),
-                      builder: (_, state) => MusicToggleButton(
-                        isEnabled: state.isMusicEnabled,
-                        onTap: () => sl<MusicBloc>().add(const MusicToggle()),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    // Settings: rating / support / privacy / about.
-                    // LONG PRESS only — keeps little fingers out (and is
-                    // explained during onboarding).
-                    GestureDetector(
-                      onLongPress: () => _showSettingsSheet(context),
-                      onTap: () {
-                        ScaffoldMessenger.of(context)
-                          ..hideCurrentSnackBar()
-                          ..showSnackBar(
-                            const SnackBar(
-                              behavior: SnackBarBehavior.floating,
-                              duration: Duration(seconds: 2),
-                              content: Text(
-                                'Grown-ups: press and hold to open settings',
-                              ),
-                            ),
-                          );
-                      },
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.12),
-                          shape: BoxShape.circle,
                         ),
-                        child: const Icon(
-                          Icons.settings_rounded,
-                          color: AppColors.primary,
-                          size: 26,
-                        ),
-                      ),
+                      );
+                  },
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
                     ),
-                  ],
-                ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.2),
-              ),
-          builder: (context, topInset) =>
-              BlocBuilder<HomeBloc, HomeState>(
+                    child: const Icon(
+                      Icons.settings_rounded,
+                      color: AppColors.primary,
+                      size: 26,
+                    ),
+                  ),
+                ),
+              ],
+            ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.2),
+          ),
+          builder: (context, topInset) => BlocBuilder<HomeBloc, HomeState>(
             builder: (context, state) {
               if (state is HomeLoading) {
                 return const Center(child: CircularProgressIndicator());
@@ -350,9 +344,7 @@ class _SettingsTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       onTap: onTap,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       leading: Container(
         width: 44,
         height: 44,
@@ -413,17 +405,17 @@ class _LanguageGrid extends StatelessWidget {
       itemBuilder: (context, index) {
         final lang = languages[index];
         return LanguageCard(
-          language: lang,
-          onTap: () => context.push('/characters/${lang.id}'),
-        )
+              language: lang,
+              onTap: () => context.push('/characters/${lang.id}'),
+            )
             .animate(delay: (index * 80).ms)
             .fadeIn(duration: 400.ms)
             .scale(
-          begin: const Offset(0.8, 0.8),
-          end: const Offset(1, 1),
-          duration: 400.ms,
-          curve: Curves.easeOutBack,
-        );
+              begin: const Offset(0.8, 0.8),
+              end: const Offset(1, 1),
+              duration: 400.ms,
+              curve: Curves.easeOutBack,
+            );
       },
     );
   }

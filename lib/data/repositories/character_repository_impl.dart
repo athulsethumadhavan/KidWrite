@@ -8,8 +8,7 @@ class CharacterRepositoryImpl implements CharacterRepository {
   CharacterRepositoryImpl({required this.dataSource});
 
   @override
-  Future<List<Language>> getLanguages() async =>
-      dataSource.getLanguages();
+  Future<List<Language>> getLanguages() async => dataSource.getLanguages();
 
   @override
   Future<List<Character>> getCharacters({
@@ -18,8 +17,6 @@ class CharacterRepositoryImpl implements CharacterRepository {
   }) async {
     final all = dataSource.getCharacters(languageId);
     if (category == null) return all;
-    return all
-        .where((c) => c.category.name == category)
-        .toList();
+    return all.where((c) => c.category.name == category).toList();
   }
 }

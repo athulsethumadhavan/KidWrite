@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Runs the same gate CI does, before the push leaves your machine.
+#
+# Enable once:   git config core.hooksPath .githooks
+# Skip once:     git push --no-verify
+#
+# Only guards dev and main; feature branches push freely.
+
+set -e
+
+branch=$(git rev-parse --abbrev-ref HEAD)
+case "$branch" in
+  dev|main) ;;
+  *) exit 0 ;;
+esac
+
+echo "→ checks before pushing to $branch"
+
+if ! command -v flutter >/dev/null 2>&1; then
+  echo "  flutter not on PATH — skipping (CI will still check)"
+  exit 0
+fi
+
+flutter analyze --no-fatal-infos
+flutter test --reporter compact
+
+echo "✓ all green"

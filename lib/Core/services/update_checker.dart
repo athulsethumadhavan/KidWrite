@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../constants/app_colors.dart';
+import '../Constants/app_colors.dart';
 
 /// Checks a self-hosted version.json (GitHub Pages) and prompts the user to
 /// update. Two levels:
@@ -43,8 +43,7 @@ class UpdateChecker {
 
       final config = jsonDecode(response.body) as Map<String, dynamic>;
       final minVersion = config['min_version'] as String? ?? '0.0.0';
-      final latestVersion =
-          config['latest_version'] as String? ?? minVersion;
+      final latestVersion = config['latest_version'] as String? ?? minVersion;
       final message = config['message'] as String?;
 
       final info = await PackageInfo.fromPlatform();
@@ -78,10 +77,10 @@ class UpdateChecker {
   }
 
   static void _showUpdateDialog(
-      BuildContext context, {
-        required bool force,
-        String? message,
-      }) {
+    BuildContext context, {
+    required bool force,
+    String? message,
+  }) {
     showDialog(
       context: context,
       barrierDismissible: !force,
@@ -110,9 +109,9 @@ class UpdateChecker {
             message ??
                 (force
                     ? 'This version of KidWrite is no longer supported. '
-                    'Please update to keep practicing!'
+                          'Please update to keep practicing!'
                     : 'A new version of KidWrite is ready with '
-                    'improvements. Update now?'),
+                          'improvements. Update now?'),
             style: const TextStyle(height: 1.4),
           ),
           actions: [
@@ -129,8 +128,7 @@ class UpdateChecker {
                 ),
               ),
               onPressed: () async {
-                final url =
-                Platform.isIOS ? _appStoreUrl : _playStoreUrl;
+                final url = Platform.isIOS ? _appStoreUrl : _playStoreUrl;
                 try {
                   await launchUrl(
                     Uri.parse(url),

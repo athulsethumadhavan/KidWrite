@@ -77,8 +77,10 @@ class _ScrollUnderHeaderState extends State<ScrollUnderHeader> {
               // not the screen, so the dissolve lines up with the bar even
               // when the body doesn't fill the window.
               final h = rect.height <= 0 ? 1.0 : rect.height;
-              final end =
-                  ((_headerHeight + widget.fadeHeight) / h).clamp(0.0, 1.0);
+              final end = ((_headerHeight + widget.fadeHeight) / h).clamp(
+                0.0,
+                1.0,
+              );
               final start = (end * 0.55).clamp(0.0, 1.0);
               return LinearGradient(
                 begin: Alignment.topCenter,

@@ -1,0 +1,70 @@
+# KidWrite — Android release lanes
+#
+#   cd android && bundle exec fastlane internal      # test track
+#   cd android && bundle exec fastlane production    # live, staged rollout
+#
+# The build itself is done by Flutter, not Gradle directly, so the version and
+# signing config come from android/local.properties exactly as they do when
+# building by hand.
+
+default_platform(:android)
+
+APP_ROOT = File.expand_path("../..", __dir__)
+
+platform :android do
+  desc "Build the app bundle from a clean tree"
+  lane :build do
+    Dir.chdir(APP_ROOT) do
+      sh("flutter", "clean")
+      sh("flutter", "pub", "get")
+      sh("flutter", "build", "appbundle", "--release")
+    end
+  end
+
+  desc "Run the unit and widget tests. Fails the lane on the first failure."
+  lane :test do
+    Dir.chdir(APP_ROOT) do
+      sh("flutter", "pub", "get")
+      sh("flutter", "analyze")
+      sh("flutter", "test")
+    end
+  end
+
+  desc "Upload to the internal test track — what a merge to main does"
+  lane :internal do
+    test
+    build
+    upload_to_play_store(
+      track: "internal",
+      aab: "#{APP_ROOT}/build/app/outputs/bundle/release/app-release.aab",
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      release_status: "completed"
+    )
+  end
+
+  desc "Promote the internal build to production. Manual, on purpose."
+  lane :production do
+    # Promotes the artifact already on the internal track rather than building
+    # again — the bytes that were tested are the bytes that ship.
+    upload_to_play_store(
+      track: "internal",
+      track_promote_to: "production",
+      # Start at 20%: a bad build reaches a fifth of users, not all of them.
+      # Bump it in the Play Console once the crash rate looks clean.
+      rollout: "0.2",
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
+  desc "Print the highest versionCode Play has seen — useful before bumping"
+  lane :current_version do
+    codes = google_play_track_version_codes(track: "production")
+    UI.important("Play production versionCode: #{codes.max}")
+  end
+end

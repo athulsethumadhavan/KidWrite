@@ -1,11 +1,19 @@
 import 'package:equatable/equatable.dart';
 
-enum CharacterCategory { vowel, consonant, number, uppercase, lowercase, shape, line }
+enum CharacterCategory {
+  vowel,
+  consonant,
+  number,
+  uppercase,
+  lowercase,
+  shape,
+  line,
+}
 
 class Character extends Equatable {
   final String id;
-  final String symbol;       // Actual Unicode character, e.g. 'A', 'അ'
-  final String name;         // English name, e.g. 'Letter A', 'Vowel A'
+  final String symbol; // Actual Unicode character, e.g. 'A', 'അ'
+  final String name; // English name, e.g. 'Letter A', 'Vowel A'
   final String pronunciation; // How it sounds, e.g. 'ay', 'ah'
   final String languageId;
   final CharacterCategory category;

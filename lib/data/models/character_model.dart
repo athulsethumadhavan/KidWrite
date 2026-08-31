@@ -19,7 +19,7 @@ class CharacterModel extends Character {
       pronunciation: map['pronunciation'] as String,
       languageId: map['languageId'] as String,
       category: CharacterCategory.values.firstWhere(
-            (e) => e.name == map['category'],
+        (e) => e.name == map['category'],
         orElse: () => CharacterCategory.lowercase,
       ),
       orderIndex: map['orderIndex'] as int,

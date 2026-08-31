@@ -1,0 +1,8 @@
+app_identifier("com.atsIOSDev.kidWrite")
+apple_id(ENV["APPLE_ID"] || "athulsethumadhavan@gmail.com")
+team_id(ENV["APPLE_TEAM_ID"] || "J766WB3295")
+
+# This Apple ID belongs to three App Store Connect teams. On CI the API key
+# identifies the team on its own, but a local run logs in with the Apple ID and
+# stops to ask which one — so name it. KidWrite is on "Athul Sethumadhavan".
+itc_team_id(ENV["APPLE_ITC_TEAM_ID"] || "129042744")

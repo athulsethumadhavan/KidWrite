@@ -15,12 +15,11 @@ class MusicState extends Equatable {
     bool? isMusicEnabled,
     bool? isSoundEnabled,
     bool? isPlaying,
-  }) =>
-      MusicState(
-        isMusicEnabled: isMusicEnabled ?? this.isMusicEnabled,
-        isSoundEnabled: isSoundEnabled ?? this.isSoundEnabled,
-        isPlaying: isPlaying ?? this.isPlaying,
-      );
+  }) => MusicState(
+    isMusicEnabled: isMusicEnabled ?? this.isMusicEnabled,
+    isSoundEnabled: isSoundEnabled ?? this.isSoundEnabled,
+    isPlaying: isPlaying ?? this.isPlaying,
+  );
 
   @override
   List<Object?> get props => [isMusicEnabled, isSoundEnabled, isPlaying];

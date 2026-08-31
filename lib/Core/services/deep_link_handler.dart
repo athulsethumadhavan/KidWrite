@@ -17,7 +17,9 @@ class DeepLinkHandler {
       _handle(initialUri, router);
     }
 
-    _subscription = _appLinks.uriLinkStream.listen((uri) => _handle(uri, router));
+    _subscription = _appLinks.uriLinkStream.listen(
+      (uri) => _handle(uri, router),
+    );
   }
 
   static void dispose() {
