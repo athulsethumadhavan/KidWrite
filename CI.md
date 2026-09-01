@@ -187,6 +187,16 @@ upload key cannot be rotated without Google's help.
 
 Neither promote job rebuilds. It ships the binary that was tested.
 
+### What does not trigger a build
+
+`release.yml` ignores pushes that only touch `docs/**`, any `.md`, `.github/**`
+or `LICENSE`. Editing the site or the press kit is not a release, and on
+Android it could not be one anyway — the versionCode has not moved, so Play
+would reject the upload.
+
+If a release ever needs to go out and the only change is in one of those
+paths, run it by hand: **Actions → release → Run workflow**.
+
 ---
 
 ## Worth adding later

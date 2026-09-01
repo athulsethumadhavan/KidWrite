@@ -1,18 +1,23 @@
 # main → TestFlight and the Play internal track.
 #
-# This does NOT submit to review. Merging is how a build gets staged for
-# testing; promoting it to the stores is the separate `promote` workflow, run
-# by hand once the build has been tried on a device. A merge should never be
-# able to put something in front of Apple by accident.
-#
-# The docs job is last and depends on a successful upload, so the version feed
-# can never advertise a build that was never accepted.
+# This does NOT submit to review. Merging dev into main is how a build gets
+# staged for testing; promoting it to the stores is the separate `promote`
+# workflow, run by hand once the build has been tried on a device. A merge
+# should never be able to put something in front of Apple by accident.
 
 name: release
 
 on:
   push:
     branches: [main]
+    # The site and the write-ups ship with the app but are not part of it.
+    # Editing a page should not spend a build, and on Android it cannot: the
+    # versionCode has not moved, so Play would reject the upload anyway.
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+      - ".github/**"
+      - "LICENSE"
   workflow_dispatch:
     inputs:
       skip_ios:

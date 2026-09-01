@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kid_write/Core/Constants/app_constants.dart';
+import 'package:kid_write/Core/tracing/hindi_strokes.dart';
 import 'package:kid_write/Core/tracing/letter_strokes.dart';
 import 'package:kid_write/Core/tracing/malayalam_strokes.dart';
 
@@ -73,6 +74,11 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
     if (character.languageId == LanguageId.malayalam) {
       return MalayalamStrokes.of(character.symbol);
     }
+    // Hindi vowels only so far; the consonants have no table yet and fall
+    // through to free tracing over the Noto glyph.
+    if (character.languageId == LanguageId.hindi) {
+      return HindiStrokes.of(character.symbol);
+    }
     return null;
   }
 
@@ -85,6 +91,10 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
       return MalayalamStrokes.shapeOf(character.symbol) ??
           MalayalamStrokes.of(character.symbol);
     }
+    if (character.languageId == LanguageId.hindi) {
+      return HindiStrokes.shapeOf(character.symbol) ??
+          HindiStrokes.of(character.symbol);
+    }
     return _craftedFor(character);
   }
 
@@ -92,9 +102,11 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
   /// letters differ hugely in width, so a single constant is far too fat for
   /// the wide ones and would let a child stray outside the letter.
   double _bodyWidthFor(Character character) {
-    final ml = character.languageId == LanguageId.malayalam
-        ? MalayalamStrokes.bodyWidth(character.symbol)
-        : null;
+    final ml = switch (character.languageId) {
+      LanguageId.malayalam => MalayalamStrokes.bodyWidth(character.symbol),
+      LanguageId.hindi => HindiStrokes.bodyWidth(character.symbol),
+      _ => null,
+    };
     // Wide letters squeeze down to a very thin measured stroke; keep a floor
     // so a four-year-old's finger still has something it can follow.
     final base = ml == null ? _craftedBodyBase : math.max(ml, _minBodyWidth);
