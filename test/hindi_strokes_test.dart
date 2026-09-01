@@ -14,8 +14,18 @@ import 'package:kid_write/domain/entities/character.dart';
 void main() {
   final ds = CharacterLocalDataSourceImpl();
   final hindi = ds.getCharacters(LanguageId.hindi);
+
+  // ऋ is in the vowel table but has no path yet: its stroke order has not been
+  // settled, and a guessed order is worse than the font fallback. Remove it
+  // from here the moment the path lands.
+  const notYetGuided = {'ऋ'};
+
   final vowels = hindi
-      .where((c) => c.category == CharacterCategory.vowel)
+      .where(
+        (c) =>
+            c.category == CharacterCategory.vowel &&
+            !notYetGuided.contains(c.symbol),
+      )
       .toList();
 
   test('every Hindi vowel is guided', () {
@@ -31,14 +41,16 @@ void main() {
     }
   });
 
-  test('the consonants are deliberately not guided yet', () {
-    // Only the vowels were in the reference animation. Asserting this keeps
-    // a half-finished consonant table from shipping unnoticed — delete this
-    // test when they are authored.
-    final consonants = hindi.where(
-      (c) => c.category == CharacterCategory.consonant,
+  test('what is not guided yet is not half-guided either', () {
+    // Asserting the gap keeps a half-finished table from shipping unnoticed.
+    // Delete the entry from notYetGuided, or this whole test for consonants,
+    // when the paths are authored.
+    final pending = hindi.where(
+      (c) =>
+          c.category == CharacterCategory.consonant ||
+          notYetGuided.contains(c.symbol),
     );
-    for (final c in consonants) {
+    for (final c in pending) {
       expect(HindiStrokes.of(c.symbol), isNull, reason: c.symbol);
     }
   });

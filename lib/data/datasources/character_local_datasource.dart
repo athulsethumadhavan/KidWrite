@@ -387,10 +387,14 @@ class CharacterLocalDataSourceImpl implements CharacterLocalDataSource {
       ['ई', 'Ii', 'ii'],
       ['उ', 'U', 'u'],
       ['ऊ', 'Uu', 'uu'],
+      ['ऋ', 'Ri', 'ri'],
       ['ए', 'E', 'e'],
       ['ऐ', 'Ai', 'ai'],
       ['ओ', 'O', 'o'],
       ['औ', 'Au', 'au'],
+      // अं and अः are अ with a mark, and are taught alongside the vowels.
+      ['अं', 'Am', 'am'],
+      ['अः', 'Ah', 'ah'],
     ];
     final consonants = [
       ['क', 'Ka', 'ka'],
