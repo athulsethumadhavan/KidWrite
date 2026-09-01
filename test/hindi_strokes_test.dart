@@ -15,10 +15,10 @@ void main() {
   final ds = CharacterLocalDataSourceImpl();
   final hindi = ds.getCharacters(LanguageId.hindi);
 
-  // ऋ is in the vowel table but has no path yet: its stroke order has not been
-  // settled, and a guessed order is worse than the font fallback. Remove it
-  // from here the moment the path lands.
-  const notYetGuided = {'ऋ'};
+  // Every vowel is guided now. If one is ever added to the table ahead of its
+  // path, name it here rather than letting this file go red — a guessed stroke
+  // order is worse than the font fallback.
+  const notYetGuided = <String>{};
 
   final vowels = hindi
       .where(
@@ -27,6 +27,10 @@ void main() {
             !notYetGuided.contains(c.symbol),
       )
       .toList();
+
+  test('the table covers all thirteen vowels', () {
+    expect(vowels.length, 13);
+  });
 
   test('every Hindi vowel is guided', () {
     expect(vowels, isNotEmpty);
