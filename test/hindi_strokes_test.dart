@@ -51,6 +51,7 @@ void main() {
   const guidedConsonants = {
     'क', 'ख', 'ग', 'घ', 'ङ',
     'च', 'छ', 'ज', 'झ', 'ञ',
+    'ट', 'ठ', 'ड', 'ढ', 'ण',
   };
 
   test('the finished consonants are guided', () {
