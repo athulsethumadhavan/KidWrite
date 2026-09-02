@@ -48,7 +48,10 @@ void main() {
   // The consonants are being authored a few at a time. These are done; the
   // rest still fall back to the font, and asserting the boundary keeps a
   // half-finished one from shipping unnoticed. Move a letter up as it lands.
-  const guidedConsonants = {'क', 'ख', 'ग', 'घ', 'ङ'};
+  const guidedConsonants = {
+    'क', 'ख', 'ग', 'घ', 'ङ',
+    'च', 'छ', 'ज', 'झ', 'ञ',
+  };
 
   test('the finished consonants are guided', () {
     for (final c in hindi.where(
