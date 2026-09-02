@@ -45,13 +45,25 @@ void main() {
     }
   });
 
+  // The consonants are being authored a few at a time. These are done; the
+  // rest still fall back to the font, and asserting the boundary keeps a
+  // half-finished one from shipping unnoticed. Move a letter up as it lands.
+  const guidedConsonants = {'क', 'ख', 'ग', 'घ', 'ङ'};
+
+  test('the finished consonants are guided', () {
+    for (final c in hindi.where(
+      (c) => guidedConsonants.contains(c.symbol),
+    )) {
+      expect(HindiStrokes.of(c.symbol), isNotNull, reason: c.symbol);
+      expect(HindiStrokes.bodyWidth(c.symbol), isNotNull, reason: c.symbol);
+    }
+  });
+
   test('what is not guided yet is not half-guided either', () {
-    // Asserting the gap keeps a half-finished table from shipping unnoticed.
-    // Delete the entry from notYetGuided, or this whole test for consonants,
-    // when the paths are authored.
     final pending = hindi.where(
       (c) =>
-          c.category == CharacterCategory.consonant ||
+          (c.category == CharacterCategory.consonant &&
+              !guidedConsonants.contains(c.symbol)) ||
           notYetGuided.contains(c.symbol),
     );
     for (final c in pending) {
