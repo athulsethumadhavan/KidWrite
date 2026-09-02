@@ -44,8 +44,8 @@ class LetterWords {
   /// Artwork that overrides [LetterWord.emoji] when the file exists.
   static String assetFor(Character c) => 'assets/words/${fileStem(c)}.png';
 
-  /// Null for scripts with no word list (shapes, lines, Hindi, Tamil) — the
-  /// caller then keeps the plain celebration.
+  /// Null for scripts with no word list (shapes, lines, Tamil) and for the
+  /// Hindi consonants — the caller then keeps the plain celebration.
   static LetterWord? of(Character c) {
     switch (c.languageId) {
       case 'english_upper':
@@ -56,6 +56,8 @@ class LetterWords {
         return _numbers[c.symbol];
       case 'malayalam':
         return _malayalam[c.symbol];
+      case 'hindi':
+        return _hindi[c.symbol];
       default:
         return null;
     }
@@ -217,6 +219,41 @@ class LetterWords {
         // Letter first, then the word — "അ അമ്മ", the way it is taught. The
         // comma is a pause: without it a bare vowel runs straight into the
         // word and the two blur together.
+        spoken: '${e[0]}, ${e[1]}',
+      ),
+  };
+
+  // ---------------------------------------------------------------------------
+  // Hindi — the words every Devanagari primer uses, so a parent recognises
+  // them. Vowels only; the consonants are not guided yet.
+  //
+  // Six of these have no emoji that really means the thing — marked below.
+  // They read as near-misses rather than nonsense, and drop out the moment
+  // artwork lands in assets/words/hi_vowel_<n>.png.
+  // ---------------------------------------------------------------------------
+  static const List<List<String>> _hi = [
+    // symbol, word, roman, emoji
+    ['अ', 'अनार', 'anaar', '🍒'], // pomegranate — no emoji exists
+    ['आ', 'आम', 'aam', '🥭'],
+    ['इ', 'इमली', 'imli', '🫘'], // tamarind — nearest pod
+    ['ई', 'ईख', 'eekh', '🎋'], // sugarcane — nearest tall cane
+    ['उ', 'उल्लू', 'ullu', '🦉'],
+    ['ऊ', 'ऊन', 'oon', '🧶'],
+    ['ऋ', 'ऋषि', 'rishi', '🧙'], // sage — 🧘 read as yoga, not a person
+    ['ए', 'एकतारा', 'ektaara', '🪕'], // ektara — nearest string instrument
+    ['ऐ', 'ऐनक', 'ainak', '👓'],
+    ['ओ', 'ओखली', 'okhli', '🥣'], // mortar — nearest bowl
+    ['औ', 'औरत', 'aurat', '👩'],
+    ['अं', 'अंगूर', 'angoor', '🍇'],
+    ['अः', 'नमः', 'namah', '🙏'],
+  ];
+
+  static final Map<String, LetterWord> _hindi = {
+    for (final e in _hi)
+      e[0]: LetterWord(
+        word: e[1],
+        roman: e[2],
+        emoji: e[3],
         spoken: '${e[0]}, ${e[1]}',
       ),
   };

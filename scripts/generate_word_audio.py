@@ -65,6 +65,10 @@ malayalam = re.findall(
     r"\['([^']+)', '([^']+)', '([^']+)', '[^']+'\]",
     block(words_src, '_ml = ['))
 
+hindi = re.findall(
+    r"\['([^']+)', '([^']+)', '([^']+)', '[^']+'\]",
+    block(words_src, '_hi = ['))
+
 numbers = re.findall(
     r"\['([a-z]+)', '([a-z]*)', '[^']+'\]",
     block(words_src, '_numberItems = ['))
@@ -74,9 +78,17 @@ chars_src = read(CHARS_DART)
 ml_vowels = re.findall(
     r"\['([ഀ-ൿ]+)', '[^']*', '[^']*'\]",
     block(chars_src, 'final vowels = ['))
+# Both scripts declare `final vowels = [`, and block() takes the first match,
+# so anchor on the Hindi builder before looking for its list.
+_hi_src = chars_src[chars_src.index('List<CharacterModel> _hindiCharacters'):]
+hi_vowels = re.findall(
+    r"\['([\u0900-\u097F]+)', '[^']*', '[^']*'\]",
+    block(_hi_src, 'final vowels = ['))
 ml_cons = re.findall(
     r"\['([ഀ-ൿ]+)', '[^']*', '[^']*'\]",
     block(chars_src, 'final consonants = ['))
+
+hi_id = {s: f'hi_vowel_{i}' for i, s in enumerate(hi_vowels)}
 
 ml_id = {}
 for i, sym in enumerate(ml_vowels):
@@ -108,6 +120,13 @@ for sym, word, roman in malayalam:
     # Letter first, then the word. The comma matters: without a pause gTTS
     # runs the bare vowel straight into the word and it turns to mush.
     jobs.append((cid, f'{sym}, {word}', 'ml'))
+
+for sym, word, roman in hindi:
+    cid = hi_id.get(sym)
+    if cid is None:
+        missing.append(sym)
+        continue
+    jobs.append((cid, f'{sym}, {word}', 'hi'))
 
 if missing:
     print('!! not in the character list, skipped:', ' '.join(missing),
