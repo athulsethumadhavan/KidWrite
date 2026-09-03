@@ -8,7 +8,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kid_write/Core/Constants/app_constants.dart';
 import 'package:kid_write/Core/data/letter_words.dart';
 import 'package:kid_write/data/datasources/character_local_datasource.dart';
-import 'package:kid_write/domain/entities/character.dart';
 
 void main() {
   final ds = CharacterLocalDataSourceImpl();
@@ -19,15 +18,14 @@ void main() {
     LanguageId.englishLower,
     LanguageId.numbers,
     LanguageId.malayalam,
+    LanguageId.hindi,
   ];
 
   // Everything written in an Indic script: letter-then-word aloud, and a roman
-  // spelling for devices with no voice for it. Hindi is vowels only for now.
+  // spelling for devices with no voice for it.
   final indic = [
     ...ds.getCharacters(LanguageId.malayalam),
-    ...ds
-        .getCharacters(LanguageId.hindi)
-        .where((c) => c.category == CharacterCategory.vowel),
+    ...ds.getCharacters(LanguageId.hindi),
   ];
 
   group('coverage', () {
@@ -55,17 +53,15 @@ void main() {
       }
     });
 
-    test('Hindi vowels have words, its consonants deliberately do not', () {
-      // The only script that is half-covered: the vowels are taught with the
-      // primer words, the consonants are not guided yet and fall back to the
-      // plain celebration. Delete this test once they are authored.
-      for (final c in ds.getCharacters(LanguageId.hindi)) {
-        final w = LetterWords.of(c);
-        if (c.category == CharacterCategory.vowel) {
-          expect(w, isNotNull, reason: 'no word for ${c.symbol}');
-        } else {
-          expect(w, isNull, reason: '${c.symbol} has a word but is not guided');
-        }
+    test('ङ and ञ use a word that contains them', () {
+      // Neither begins a Hindi word, so both are taught through a familiar
+      // word they appear inside — and that only works if the word is spelt
+      // with the conjunct rather than the anusvara a modern writer would use.
+      for (final symbol in ['ङ', 'ञ']) {
+        final c = ds
+            .getCharacters(LanguageId.hindi)
+            .firstWhere((c) => c.symbol == symbol);
+        expect(LetterWords.of(c)!.word, contains(symbol), reason: symbol);
       }
     });
   });

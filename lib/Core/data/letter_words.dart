@@ -44,8 +44,8 @@ class LetterWords {
   /// Artwork that overrides [LetterWord.emoji] when the file exists.
   static String assetFor(Character c) => 'assets/words/${fileStem(c)}.png';
 
-  /// Null for scripts with no word list (shapes, lines, Tamil) and for the
-  /// Hindi consonants — the caller then keeps the plain celebration.
+  /// Null for scripts with no word list (shapes, lines, Tamil) — the caller
+  /// then keeps the plain celebration.
   static LetterWord? of(Character c) {
     switch (c.languageId) {
       case 'english_upper':
@@ -225,11 +225,17 @@ class LetterWords {
 
   // ---------------------------------------------------------------------------
   // Hindi — the words every Devanagari primer uses, so a parent recognises
-  // them. Vowels only; the consonants are not guided yet.
+  // them. All thirteen vowels and all thirty-three consonants.
   //
-  // Six of these have no emoji that really means the thing — marked below.
-  // They read as near-misses rather than nonsense, and drop out the moment
-  // artwork lands in assets/words/hi_vowel_<n>.png.
+  // Some have no emoji that really means the thing — marked below. They read
+  // as near-misses rather than nonsense, and drop out the moment artwork
+  // lands in assets/words/hi_<vowel|cons>_<n>.png.
+  //
+  // ङ and ञ never begin a Hindi word, so like the rare Malayalam letters they
+  // use a familiar word that *contains* them. Both are written here in the
+  // conjunct form the letter actually appears in — रङ्ग, पञ्च — where modern
+  // spelling would use the anusvara (रंग, पंच). The conjunct is the point:
+  // the child has to be able to see the letter in the word.
   // ---------------------------------------------------------------------------
   static const List<List<String>> _hi = [
     // symbol, word, roman, emoji
@@ -246,6 +252,39 @@ class LetterWords {
     ['औ', 'औरत', 'aurat', '👩'],
     ['अं', 'अंगूर', 'angoor', '🍇'],
     ['अः', 'नमः', 'namah', '🙏'],
+    ['क', 'कबूतर', 'kabootar', '🕊️'],
+    ['ख', 'खरगोश', 'khargosh', '🐰'],
+    ['ग', 'गाय', 'gaay', '🐄'],
+    ['घ', 'घड़ी', 'ghadi', '⌚'],
+    ['ङ', 'रङ्ग', 'rang', '🎨'],
+    ['च', 'चम्मच', 'chammach', '🥄'],
+    ['छ', 'छाता', 'chhata', '☂️'],
+    ['ज', 'जहाज़', 'jahaaz', '🚢'],
+    ['झ', 'झंडा', 'jhanda', '🚩'],
+    ['ञ', 'पञ्च', 'panch', '🖐️'],
+    ['ट', 'टमाटर', 'tamatar', '🍅'],
+    ['ठ', 'ठेला', 'thela', '🛒'], // handcart — nearest trolley
+    ['ड', 'डमरू', 'damroo', '🪘'],
+    ['ढ', 'ढोल', 'dhol', '🥁'],
+    ['ण', 'वीणा', 'veena', '🎻'], // veena — nearest string instrument
+    ['त', 'तितली', 'titli', '🦋'],
+    ['थ', 'थाली', 'thaali', '🍽️'],
+    ['द', 'दरवाज़ा', 'darwaaza', '🚪'],
+    ['ध', 'धनुष', 'dhanush', '🏹'],
+    ['न', 'नल', 'nal', '🚰'],
+    ['प', 'पतंग', 'patang', '🪁'],
+    ['फ', 'फल', 'phal', '🍎'],
+    ['ब', 'बतख़', 'batakh', '🦆'],
+    ['भ', 'भालू', 'bhaaloo', '🐻'],
+    ['म', 'मछली', 'machhli', '🐟'],
+    ['य', 'यान', 'yaan', '🚀'],
+    ['र', 'रथ', 'rath', '🎠'], // chariot — nearest horse-drawn ride
+    ['ल', 'लोमड़ी', 'lomdi', '🦊'],
+    ['व', 'वन', 'van', '🌲'],
+    ['श', 'शेर', 'sher', '🦁'],
+    ['ष', 'पुष्प', 'pushp', '🌸'],
+    ['स', 'सूरज', 'sooraj', '☀️'],
+    ['ह', 'हाथी', 'haathi', '🐘'],
   ];
 
   static final Map<String, LetterWord> _hindi = {

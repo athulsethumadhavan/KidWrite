@@ -49,7 +49,7 @@ class AppConstants {
   /// TESTING ONLY — opens every letter on the level map so the whole set can
   /// be checked without earning three stars on each one first.
   /// Set back to false before release.
-  static const bool unlockAllLetters = true;
+  static const bool unlockAllLetters = false;
   static const double canvasPadding = 24.0;
   // Accuracy threshold (0.0–1.0): fraction of guide points hit
   static const double successThreshold = 0.67;

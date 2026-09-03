@@ -84,11 +84,22 @@ _hi_src = chars_src[chars_src.index('List<CharacterModel> _hindiCharacters'):]
 hi_vowels = re.findall(
     r"\['([\u0900-\u097F]+)', '[^']*', '[^']*'\]",
     block(_hi_src, 'final vowels = ['))
+hi_cons = re.findall(
+    r"\['([ऀ-ॿ]+)', '[^']*', '[^']*'\]",
+    block(_hi_src, 'final consonants = ['))
 ml_cons = re.findall(
     r"\['([ഀ-ൿ]+)', '[^']*', '[^']*'\]",
     block(chars_src, 'final consonants = ['))
 
-hi_id = {s: f'hi_vowel_{i}' for i, s in enumerate(hi_vowels)}
+# Both halves of each script, not just the vowels. While this mapped Hindi
+# vowels only, every consonant fell through to the "not in the character list"
+# warning and got no clip at all — so the app spoke those words with the live
+# device voice, which is markedly less clear than the recording.
+hi_id = {}
+for i, sym in enumerate(hi_vowels):
+    hi_id[sym] = f'hi_vowel_{i}'
+for i, sym in enumerate(hi_cons):
+    hi_id[sym] = f'hi_cons_{i}'
 
 ml_id = {}
 for i, sym in enumerate(ml_vowels):
@@ -140,17 +151,33 @@ flags = ''.join([
 print(f'{len(jobs)} clips → {os.path.normpath(OUT)}{flags}\n')
 made = skipped = failed = 0
 
+def usable(path):
+    """A clip counts as present only if it has audio in it.
+
+    gTTS opens the destination before it makes its network call, so a run
+    without a connection leaves a trail of 0-byte .mp3 files. Those satisfy
+    os.path.exists, so the next run reports "already there" and skips them —
+    and the app, finding a file, plays silence instead of falling back to the
+    device voice. A failed run must leave nothing behind.
+    """
+    return os.path.exists(path) and os.path.getsize(path) > 0
+
+
 for cid, text, lang in jobs:
     path = os.path.join(OUT, f'{cid}.mp3')
-    if os.path.exists(path) and not FORCE:
+    if usable(path) and not FORCE:
         skipped += 1
         continue
+    tmp = path + '.part'
     try:
-        gTTS(text=text, lang=lang, slow=SLOW).save(path)
+        gTTS(text=text, lang=lang, slow=SLOW).save(tmp)
+        os.replace(tmp, path)          # only once it actually has audio
         made += 1
         print(f'  ✓  {cid}.mp3  [{lang}] "{text}"')
         time.sleep(0.15)   # polite delay, gTTS rate-limits
     except Exception as exc:                      # noqa: BLE001
+        if os.path.exists(tmp):
+            os.remove(tmp)
         failed += 1
         print(f'  ✗  {cid}  {exc}', file=sys.stderr)
 

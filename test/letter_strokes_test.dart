@@ -106,9 +106,9 @@ void main() {
 
   group('scripts without crafted paths', () {
     test('Hindi and Tamil are not in this table', () {
-      // Hindi vowels are guided, but from HindiStrokes — see
-      // hindi_strokes_test.dart. Nothing Indic belongs in LetterStrokes, which
-      // is Latin, numbers, shapes and lines only.
+      // Hindi is guided, but from HindiStrokes — see hindi_strokes_test.dart.
+      // Nothing Indic belongs in LetterStrokes, which is Latin, numbers,
+      // shapes and lines only.
       var found = 0;
       for (final lang in [LanguageId.hindi, LanguageId.tamil]) {
         for (final c in ds.getCharacters(lang)) {
