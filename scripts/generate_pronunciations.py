@@ -52,9 +52,21 @@ def block(text, marker, after=0):
     return text[i:text.index('];', i)]
 
 
+def unescape(s):
+    r"""Undo Dart's source escapes.
+
+    The pattern below captures what is *written* between the quotes, not what
+    Dart compiles it to. The left slanting line is written '\\' and is one
+    backslash at runtime, so without this the manifest filed
+    line_slant_left.mp3 under a two-character symbol the app never shows, and
+    letter_audio_test went red on every run.
+    """
+    return re.sub(r'\\(.)', r'\1', s)
+
+
 def rows(marker, after=0):
     """Every ['a', 'b', ...] row inside that list."""
-    return [re.findall(r"'((?:[^'\\]|\\.)*)'", line)
+    return [[unescape(c) for c in re.findall(r"'((?:[^'\\]|\\.)*)'", line)]
             for line in block(marker, after).splitlines()
             if line.strip().startswith('[')]
 
@@ -71,7 +83,7 @@ def block_from(fn, marker):
 
 
 def rows_from(fn, marker):
-    return [re.findall(r"'((?:[^'\\]|\\.)*)'", line)
+    return [[unescape(c) for c in re.findall(r"'((?:[^'\\]|\\.)*)'", line)]
             for line in block_from(fn, marker).splitlines()
             if line.strip().startswith('[')]
 

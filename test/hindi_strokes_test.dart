@@ -45,35 +45,22 @@ void main() {
     }
   });
 
-  // The consonants are being authored a few at a time. These are done; the
-  // rest still fall back to the font, and asserting the boundary keeps a
-  // half-finished one from shipping unnoticed. Move a letter up as it lands.
-  const guidedConsonants = {
-    'क', 'ख', 'ग', 'घ', 'ङ',
-    'च', 'छ', 'ज', 'झ', 'ञ',
-    'ट', 'ठ', 'ड', 'ढ', 'ण',
-    'त', 'थ', 'द', 'ध', 'न',
-    'प', 'फ', 'ब', 'भ', 'म',
-  };
-
-  test('the finished consonants are guided', () {
-    for (final c in hindi.where(
-      (c) => guidedConsonants.contains(c.symbol),
-    )) {
-      expect(HindiStrokes.of(c.symbol), isNotNull, reason: c.symbol);
-      expect(HindiStrokes.bodyWidth(c.symbol), isNotNull, reason: c.symbol);
-    }
-  });
-
-  test('what is not guided yet is not half-guided either', () {
-    final pending = hindi.where(
-      (c) =>
-          (c.category == CharacterCategory.consonant &&
-              !guidedConsonants.contains(c.symbol)) ||
-          notYetGuided.contains(c.symbol),
+  // The consonants were authored a few at a time and all thirty-three are now
+  // done, so nothing in Hindi falls back to the font. If one is ever added to
+  // the table ahead of its path, this is what will catch it.
+  test('every consonant is guided', () {
+    final consonants = hindi.where(
+      (c) => c.category == CharacterCategory.consonant,
     );
-    for (final c in pending) {
-      expect(HindiStrokes.of(c.symbol), isNull, reason: c.symbol);
+    expect(consonants.length, 33);
+    for (final c in consonants) {
+      expect(
+        HindiStrokes.of(c.symbol),
+        isNotNull,
+        reason: '${c.symbol} would fall back to free tracing',
+      );
+      expect(HindiStrokes.shapeOf(c.symbol), isNotNull, reason: c.symbol);
+      expect(HindiStrokes.bodyWidth(c.symbol), isNotNull, reason: c.symbol);
     }
   });
 
