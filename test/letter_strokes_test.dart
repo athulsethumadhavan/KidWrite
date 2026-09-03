@@ -105,11 +105,10 @@ void main() {
   });
 
   group('scripts without crafted paths', () {
-    test('Hindi and Tamil free-trace, and that is deliberate', () {
-      // Their guided patterns do not exist yet. Half-fixing them is worse than
-      // the font fallback, so this asserts the current state on purpose — if
-      // paths are ever authored, delete this test rather than working around
-      // it.
+    test('Hindi and Tamil are not in this table', () {
+      // Hindi is guided, but from HindiStrokes — see hindi_strokes_test.dart.
+      // Nothing Indic belongs in LetterStrokes, which is Latin, numbers,
+      // shapes and lines only.
       var found = 0;
       for (final lang in [LanguageId.hindi, LanguageId.tamil]) {
         for (final c in ds.getCharacters(lang)) {

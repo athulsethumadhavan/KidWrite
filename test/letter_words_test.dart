@@ -12,11 +12,20 @@ import 'package:kid_write/data/datasources/character_local_datasource.dart';
 void main() {
   final ds = CharacterLocalDataSourceImpl();
 
+  // Languages where *every* character has a word.
   const covered = [
     LanguageId.englishUpper,
     LanguageId.englishLower,
     LanguageId.numbers,
     LanguageId.malayalam,
+    LanguageId.hindi,
+  ];
+
+  // Everything written in an Indic script: letter-then-word aloud, and a roman
+  // spelling for devices with no voice for it.
+  final indic = [
+    ...ds.getCharacters(LanguageId.malayalam),
+    ...ds.getCharacters(LanguageId.hindi),
   ];
 
   group('coverage', () {
@@ -36,12 +45,23 @@ void main() {
       for (final lang in [
         LanguageId.lines,
         LanguageId.shapes,
-        LanguageId.hindi,
         LanguageId.tamil,
       ]) {
         for (final c in ds.getCharacters(lang)) {
           expect(LetterWords.of(c), isNull);
         }
+      }
+    });
+
+    test('ङ and ञ use a word that contains them', () {
+      // Neither begins a Hindi word, so both are taught through a familiar
+      // word they appear inside — and that only works if the word is spelt
+      // with the conjunct rather than the anusvara a modern writer would use.
+      for (final symbol in ['ङ', 'ञ']) {
+        final c = ds
+            .getCharacters(LanguageId.hindi)
+            .firstWhere((c) => c.symbol == symbol);
+        expect(LetterWords.of(c)!.word, contains(symbol), reason: symbol);
       }
     });
   });
@@ -58,8 +78,8 @@ void main() {
       }
     });
 
-    test('Malayalam carries a roman spelling, English does not need one', () {
-      for (final c in ds.getCharacters(LanguageId.malayalam)) {
+    test('Indic scripts carry a roman spelling, English does not need one', () {
+      for (final c in indic) {
         expect(LetterWords.of(c)!.roman, isNotNull, reason: c.id);
       }
       for (final c in ds.getCharacters(LanguageId.englishUpper)) {
@@ -67,8 +87,8 @@ void main() {
       }
     });
 
-    test('Malayalam is spoken as letter then word', () {
-      for (final c in ds.getCharacters(LanguageId.malayalam)) {
+    test('Indic scripts are spoken as letter then word', () {
+      for (final c in indic) {
         final w = LetterWords.of(c)!;
         expect(
           w.spoken,
@@ -80,7 +100,9 @@ void main() {
     });
 
     test('the roman fallback mirrors it — sound, then word', () {
-      for (final c in ds.getCharacters(LanguageId.malayalam)) {
+      // iOS has no Malayalam voice at all and Hindi is not guaranteed either,
+      // so this is what actually gets read on a lot of devices.
+      for (final c in indic) {
         final w = LetterWords.of(c)!;
         final roman = LetterWords.romanSpoken(c, w);
         expect(roman, '${c.pronunciation} ${w.roman}', reason: c.id);
@@ -106,6 +128,8 @@ void main() {
     test('are unique even ignoring case', () {
       // en_lower_A and en_lower_a are the *same file* on macOS and Windows;
       // one silently overwrote the other before fileStem existed.
+      // Hindi is in `covered` now that its consonants have words; listing it
+      // again here counted all 46 of its stems twice and failed on itself.
       final stems = <String>[];
       for (final lang in covered) {
         for (final c in ds.getCharacters(lang)) {

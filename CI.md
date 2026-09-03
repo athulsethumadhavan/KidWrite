@@ -63,12 +63,23 @@ flutter test integration_test/app_test.dart   # end-to-end, needs a device
 |---|---|
 | `test/character_data_test.dart` | the letter tables — counts, unique ids, ordering, and that `unlockAllLetters` is `false` |
 | `test/letter_words_test.dart` | every letter has a picture-word; asset filenames don't collide case-insensitively |
+| `test/letter_audio_test.dart` | every clip is still filed under the letter it was recorded for |
+| `test/letter_strokes_test.dart` | the Latin, shape and line paths; and that nothing Indic leaks into that table |
 | `test/malayalam_strokes_test.dart` | all 51 paths present, in range, no points too close together to give the hand a direction |
+| `test/hindi_strokes_test.dart` | all 13 vowels and all 33 consonants guided; same geometry checks, plus the shirorekha being drawn last |
+| `test/progress_test.dart` | stars, unlocking, and that every mutable field is in `props` |
 | `test/letter_reward_card_test.dart` | the reward card renders and dismisses |
 | `integration_test/app_test.dart` | home → letter map → practice screen, on a real device |
 
-Only the first four run in CI. Integration tests need an emulator, which
-roughly triples the job time — worth adding once the suite is worth the wait.
+Everything except the integration test runs in CI. Integration tests need an
+emulator, which roughly triples the job time — worth adding once the suite is
+worth the wait.
+
+`letter_audio_test` is the odd one: it guards *files*, not code. The clips are
+named by index (`ml_vowel_6.mp3`), so inserting a letter into the middle of a
+table silently renumbers every clip after it. That happened — ten clips went on
+playing the letter that used to hold their index and nothing failed. The
+generator now writes a manifest and this test compares it with the live table.
 
 Two of these are release guards rather than correctness tests: the
 `unlockAllLetters` check and the version-agreement check in the release
@@ -187,6 +198,16 @@ upload key cannot be rotated without Google's help.
 
 Neither promote job rebuilds. It ships the binary that was tested.
 
+### What does not trigger a build
+
+`release.yml` ignores pushes that only touch `docs/**`, any `.md`, `.github/**`
+or `LICENSE`. Editing the site or the press kit is not a release, and on
+Android it could not be one anyway — the versionCode has not moved, so Play
+would reject the upload.
+
+If a release ever needs to go out and the only change is in one of those
+paths, run it by hand: **Actions → release → Run workflow**.
+
 ---
 
 ## Worth adding later
@@ -195,9 +216,10 @@ Neither promote job rebuilds. It ships the binary that was tested.
   emulator on a GitHub runner. Slow, but it would have caught the silent-audio
   bug that unit tests can't see.
 - **Golden tests for the stroke paths.** Render each letter to a PNG and diff
-  against a checked-in reference. The Malayalam paths were corrected a dozen
-  times by eye; a golden test turns "does this still look right?" into a
-  pass/fail.
+  against a checked-in reference. The Malayalam and Hindi paths were corrected
+  dozens of times by eye, and coverage-against-the-skeleton is a poor proxy —
+  it is meaningless for letters deliberately redrawn or for constructed loops.
+  A golden test turns "does this still look right?" into a pass/fail.
 - **A screenshot lane.** Fastlane's `capture_screenshots` can regenerate the
   press-kit images on every release, so `docs/press/` stops drifting behind the
   app.
