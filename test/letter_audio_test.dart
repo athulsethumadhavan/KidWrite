@@ -12,7 +12,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kid_write/Core/Constants/app_constants.dart';
 import 'package:kid_write/Core/data/letter_words.dart';
 import 'package:kid_write/data/datasources/character_local_datasource.dart';
 
