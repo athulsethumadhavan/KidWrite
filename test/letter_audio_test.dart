@@ -21,8 +21,9 @@ void main() {
   final manifestFile = File('assets/audio/letters/manifest.json');
 
   Map<String, String> readManifest() =>
-      (jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>)
-          .map((k, v) => MapEntry(k, v as String));
+      (jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>).map(
+        (k, v) => MapEntry(k, v as String),
+      );
 
   test('a manifest exists — without it the clips cannot be checked', () {
     expect(

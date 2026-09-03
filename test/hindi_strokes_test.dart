@@ -119,9 +119,11 @@ void main() {
       final xs = pts.map((p) => p.dx);
       final ys = pts.map((p) => p.dy);
       final w =
-          xs.reduce((a, b) => a > b ? a : b) - xs.reduce((a, b) => a < b ? a : b);
+          xs.reduce((a, b) => a > b ? a : b) -
+          xs.reduce((a, b) => a < b ? a : b);
       final h =
-          ys.reduce((a, b) => a > b ? a : b) - ys.reduce((a, b) => a < b ? a : b);
+          ys.reduce((a, b) => a > b ? a : b) -
+          ys.reduce((a, b) => a < b ? a : b);
       expect(
         (w - 0.88).abs() < 0.02 || (h - 0.88).abs() < 0.02,
         isTrue,
@@ -136,8 +138,7 @@ void main() {
     for (final c in vowels) {
       final strokes = HindiStrokes.of(c.symbol)!;
       final first = strokes.first;
-      final firstTop =
-          first.map((p) => p.dy).reduce((a, b) => a < b ? a : b);
+      final firstTop = first.map((p) => p.dy).reduce((a, b) => a < b ? a : b);
       expect(
         firstTop,
         greaterThan(0.02),
