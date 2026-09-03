@@ -128,8 +128,10 @@ void main() {
     test('are unique even ignoring case', () {
       // en_lower_A and en_lower_a are the *same file* on macOS and Windows;
       // one silently overwrote the other before fileStem existed.
+      // Hindi is in `covered` now that its consonants have words; listing it
+      // again here counted all 46 of its stems twice and failed on itself.
       final stems = <String>[];
-      for (final lang in [...covered, LanguageId.hindi]) {
+      for (final lang in covered) {
         for (final c in ds.getCharacters(lang)) {
           stems.add(LetterWords.fileStem(c).toLowerCase());
         }
