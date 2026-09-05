@@ -111,6 +111,24 @@ flutter test
 
 See [CI.md](CI.md) for what each file covers and what runs on CI.
 
+## Generated assets
+
+Two scripts produce the audio the app prefers over live text-to-speech. Both need
+`pip install gtts` and an internet connection, and both skip files that already exist:
+
+```bash
+python3 scripts/generate_pronunciations.py   # assets/audio/letters/ — the letter sounds
+python3 scripts/generate_word_audio.py       # assets/audio/words/   — the reward words
+```
+
+`generate_word_audio.py` reads the words from `lib/Core/data/letter_words.dart` and the ids from
+the character table, so it stays correct when either is edited. `--force` overwrites, `--slow`
+uses a more deliberate voice. Without these files the app falls back to the device voice, which
+matters most for Malayalam — iOS has no Malayalam voice at all.
+
+Optional artwork: drop a PNG at `assets/words/<character id>.png` and it replaces the emoji on
+the reward card for that letter. See the README in that folder for the id scheme.
+
 ## Build notes
 
 **Android** — if you see `launch_background not found`, ensure
