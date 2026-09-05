@@ -7,6 +7,7 @@ import 'package:kid_write/Core/Constants/app_constants.dart';
 import 'package:kid_write/Core/tracing/hindi_strokes.dart';
 import 'package:kid_write/Core/tracing/letter_strokes.dart';
 import 'package:kid_write/Core/tracing/malayalam_strokes.dart';
+import 'package:kid_write/Core/tracing/tamil_strokes.dart';
 
 import '../../../domain/entities/character.dart';
 
@@ -74,10 +75,13 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
     if (character.languageId == LanguageId.malayalam) {
       return MalayalamStrokes.of(character.symbol);
     }
-    // Hindi vowels only so far; the consonants have no table yet and fall
-    // through to free tracing over the Noto glyph.
     if (character.languageId == LanguageId.hindi) {
       return HindiStrokes.of(character.symbol);
+    }
+    // Tamil vowels only so far; the consonants have no table yet and fall
+    // through to free tracing over the Noto glyph.
+    if (character.languageId == LanguageId.tamil) {
+      return TamilStrokes.of(character.symbol);
     }
     return null;
   }
@@ -95,6 +99,10 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
       return HindiStrokes.shapeOf(character.symbol) ??
           HindiStrokes.of(character.symbol);
     }
+    if (character.languageId == LanguageId.tamil) {
+      return TamilStrokes.shapeOf(character.symbol) ??
+          TamilStrokes.of(character.symbol);
+    }
     return _craftedFor(character);
   }
 
@@ -105,6 +113,7 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
     final ml = switch (character.languageId) {
       LanguageId.malayalam => MalayalamStrokes.bodyWidth(character.symbol),
       LanguageId.hindi => HindiStrokes.bodyWidth(character.symbol),
+      LanguageId.tamil => TamilStrokes.bodyWidth(character.symbol),
       _ => null,
     };
     // Wide letters squeeze down to a very thin measured stroke; keep a floor

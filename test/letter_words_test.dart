@@ -19,6 +19,7 @@ void main() {
     LanguageId.numbers,
     LanguageId.malayalam,
     LanguageId.hindi,
+    LanguageId.tamil,
   ];
 
   // Everything written in an Indic script: letter-then-word aloud, and a roman
@@ -26,6 +27,7 @@ void main() {
   final indic = [
     ...ds.getCharacters(LanguageId.malayalam),
     ...ds.getCharacters(LanguageId.hindi),
+    ...ds.getCharacters(LanguageId.tamil),
   ];
 
   group('coverage', () {
@@ -42,26 +44,30 @@ void main() {
     }
 
     test('scripts without a word list return null rather than throwing', () {
-      for (final lang in [
-        LanguageId.lines,
-        LanguageId.shapes,
-        LanguageId.tamil,
-      ]) {
+      for (final lang in [LanguageId.lines, LanguageId.shapes]) {
         for (final c in ds.getCharacters(lang)) {
           expect(LetterWords.of(c), isNull);
         }
       }
     });
 
-    test('ङ and ञ use a word that contains them', () {
-      // Neither begins a Hindi word, so both are taught through a familiar
-      // word they appear inside — and that only works if the word is spelt
-      // with the conjunct rather than the anusvara a modern writer would use.
-      for (final symbol in ['ङ', 'ञ']) {
-        final c = ds
-            .getCharacters(LanguageId.hindi)
-            .firstWhere((c) => c.symbol == symbol);
-        expect(LetterWords.of(c)!.word, contains(symbol), reason: symbol);
+    test('letters that never start a word are taught inside one', () {
+      // These cannot begin a word in their script, so each is taught through a
+      // familiar word it appears *inside*. That only works if the letter is
+      // actually visible in the spelling — for the Hindi pair it means the
+      // conjunct form (रङ्ग, पञ्च) rather than the anusvara a modern writer
+      // would use.
+      const inside = {
+        LanguageId.hindi: ['ङ', 'ञ'],
+        LanguageId.tamil: ['ங', 'ட', 'ண', 'ல', 'ழ', 'ள', 'ற', 'ன', 'ஸ'],
+      };
+      for (final entry in inside.entries) {
+        for (final symbol in entry.value) {
+          final c = ds
+              .getCharacters(entry.key)
+              .firstWhere((c) => c.symbol == symbol);
+          expect(LetterWords.of(c)!.word, contains(symbol), reason: symbol);
+        }
       }
     });
   });

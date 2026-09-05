@@ -69,6 +69,10 @@ hindi = re.findall(
     r"\['([^']+)', '([^']+)', '([^']+)', '[^']+'\]",
     block(words_src, '_hi = ['))
 
+tamil = re.findall(
+    r"\['([^']+)', '([^']+)', '([^']+)', '[^']+'\]",
+    block(words_src, '_ta = ['))
+
 numbers = re.findall(
     r"\['([a-z]+)', '([a-z]*)', '[^']+'\]",
     block(words_src, '_numberItems = ['))
@@ -87,6 +91,13 @@ hi_vowels = re.findall(
 hi_cons = re.findall(
     r"\['([ऀ-ॿ]+)', '[^']*', '[^']*'\]",
     block(_hi_src, 'final consonants = ['))
+_ta_src = chars_src[chars_src.index('List<CharacterModel> _tamilCharacters'):]
+ta_vowels = re.findall(
+    r"\['([஀-௿]+)', '[^']*', '[^']*'\]",
+    block(_ta_src, 'final vowels = ['))
+ta_cons = re.findall(
+    r"\['([஀-௿]+)', '[^']*', '[^']*'\]",
+    block(_ta_src, 'final consonants = ['))
 ml_cons = re.findall(
     r"\['([ഀ-ൿ]+)', '[^']*', '[^']*'\]",
     block(chars_src, 'final consonants = ['))
@@ -100,6 +111,12 @@ for i, sym in enumerate(hi_vowels):
     hi_id[sym] = f'hi_vowel_{i}'
 for i, sym in enumerate(hi_cons):
     hi_id[sym] = f'hi_cons_{i}'
+
+ta_id = {}
+for i, sym in enumerate(ta_vowels):
+    ta_id[sym] = f'ta_vowel_{i}'
+for i, sym in enumerate(ta_cons):
+    ta_id[sym] = f'ta_cons_{i}'
 
 ml_id = {}
 for i, sym in enumerate(ml_vowels):
@@ -138,6 +155,13 @@ for sym, word, roman in hindi:
         missing.append(sym)
         continue
     jobs.append((cid, f'{sym}, {word}', 'hi'))
+
+for sym, word, roman in tamil:
+    cid = ta_id.get(sym)
+    if cid is None:
+        missing.append(sym)
+        continue
+    jobs.append((cid, f'{sym}, {word}', 'ta'))
 
 if missing:
     print('!! not in the character list, skipped:', ' '.join(missing),
