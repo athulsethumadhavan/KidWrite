@@ -44,8 +44,8 @@ class LetterWords {
   /// Artwork that overrides [LetterWord.emoji] when the file exists.
   static String assetFor(Character c) => 'assets/words/${fileStem(c)}.png';
 
-  /// Null for scripts with no word list (shapes, lines, Tamil) — the caller
-  /// then keeps the plain celebration.
+  /// Null for scripts with no word list (shapes, lines) — the caller then
+  /// keeps the plain celebration.
   static LetterWord? of(Character c) {
     switch (c.languageId) {
       case 'english_upper':
@@ -58,6 +58,8 @@ class LetterWords {
         return _malayalam[c.symbol];
       case 'hindi':
         return _hindi[c.symbol];
+      case 'tamil':
+        return _tamil[c.symbol];
       default:
         return null;
     }
@@ -289,6 +291,62 @@ class LetterWords {
 
   static final Map<String, LetterWord> _hindi = {
     for (final e in _hi)
+      e[0]: LetterWord(
+        word: e[1],
+        roman: e[2],
+        emoji: e[3],
+        spoken: '${e[0]}, ${e[1]}',
+      ),
+  };
+
+  // ---------------------------------------------------------------------------
+  // Tamil — the words a Tamil primer uses, so a parent recognises them.
+  //
+  // Ten of the consonants never begin a Tamil word: ங ஞ ட ண ல ழ ள ற ன, and
+  // the grantha ஸ. Like the rare Malayalam and Hindi letters they use a
+  // familiar word that *contains* them instead, which is how Tamil charts
+  // teach them too — தங்கம் for ங, கிளி for ள, மான் for ன.
+  // ---------------------------------------------------------------------------
+  static const List<List<String>> _ta = [
+    // symbol, word, roman, emoji
+    ['அ', 'அம்மா', 'ammaa', '👩'],
+    ['ஆ', 'ஆடு', 'aadu', '🐐'],
+    ['இ', 'இலை', 'ilai', '🍃'],
+    ['ஈ', 'ஈ', 'ee', '🪰'],
+    ['உ', 'உரல்', 'ural', '🥣'], // grinding mortar — nearest bowl
+    ['ஊ', 'ஊஞ்சல்', 'oonjal', '🛝'],
+    ['எ', 'எலி', 'eli', '🐭'],
+    ['ஏ', 'ஏணி', 'eni', '🪜'],
+    ['ஐ', 'ஐஸ்', 'ice', '🧊'],
+    ['ஒ', 'ஒட்டகம்', 'ottagam', '🐪'],
+    ['ஓ', 'ஓடம்', 'odam', '🛶'],
+    ['ஔ', 'ஔடதம்', 'audatham', '💊'],
+    ['க', 'காகம்', 'kaagam', '🐦'],
+    ['ங', 'தங்கம்', 'thangam', '🥇'],
+    ['ச', 'சங்கு', 'sangu', '🐚'],
+    ['ஞ', 'ஞாயிறு', 'nyaayiru', '☀️'],
+    ['ட', 'கட்டில்', 'kattil', '🛏️'],
+    ['ண', 'கண்', 'kan', '👁️'],
+    ['த', 'தேன்', 'then', '🍯'],
+    ['ந', 'நரி', 'nari', '🦊'],
+    ['ப', 'பசு', 'pasu', '🐄'],
+    ['ம', 'மயில்', 'mayil', '🦚'],
+    ['ய', 'யானை', 'yaanai', '🐘'],
+    ['ர', 'ரயில்', 'rayil', '🚂'],
+    ['ல', 'மலர்', 'malar', '🌸'],
+    ['வ', 'வண்டி', 'vandi', '🛒'], // bullock cart — nearest cart
+    ['ழ', 'மழை', 'mazhai', '🌧️'],
+    ['ள', 'கிளி', 'kili', '🦜'],
+    ['ற', 'ஆறு', 'aaru', '🏞️'],
+    ['ன', 'மான்', 'maan', '🦌'],
+    ['ஜ', 'ஜன்னல்', 'jannal', '🪟'],
+    ['ஷ', 'ஷூ', 'shoe', '👟'],
+    ['ஸ', 'பஸ்', 'bus', '🚌'],
+    ['ஹ', 'ஹெலிகாப்டர்', 'helicopter', '🚁'],
+  ];
+
+  static final Map<String, LetterWord> _tamil = {
+    for (final e in _ta)
       e[0]: LetterWord(
         word: e[1],
         roman: e[2],
