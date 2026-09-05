@@ -35,12 +35,24 @@ void main() {
     }
   });
 
-  test('the consonants are not half-guided', () {
-    // They are still to be authored. A guessed stroke order is worse than the
-    // font fallback, so the boundary is asserted rather than left to drift.
-    // Move them up as they land.
+  // The consonants are being authored a few at a time. These are done; the
+  // rest still fall back to the font, and asserting the boundary keeps a
+  // half-finished one from shipping unnoticed. Move a letter up as it lands.
+  const guidedConsonants = {'க', 'ங', 'ச', 'ஞ', 'ட', 'ண', 'த', 'ந', 'ப', 'ம'};
+
+  test('the finished consonants are guided', () {
+    for (final c in tamil.where((c) => guidedConsonants.contains(c.symbol))) {
+      expect(TamilStrokes.of(c.symbol), isNotNull, reason: c.symbol);
+      expect(TamilStrokes.bodyWidth(c.symbol), isNotNull, reason: c.symbol);
+    }
+  });
+
+  test('what is not guided yet is not half-guided either', () {
+    // A guessed stroke order is worse than the font fallback.
     for (final c in tamil.where(
-      (c) => c.category == CharacterCategory.consonant,
+      (c) =>
+          c.category == CharacterCategory.consonant &&
+          !guidedConsonants.contains(c.symbol),
     )) {
       expect(TamilStrokes.of(c.symbol), isNull, reason: c.symbol);
     }
