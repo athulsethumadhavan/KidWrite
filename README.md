@@ -21,15 +21,14 @@ collection. Progress lives on the device and is never transmitted.
 | Shapes | 9 | ✅ |
 | Capital + small letters | 52 | ✅ |
 | Numbers | 10 | ✅ |
-| Malayalam | 51 | ✅ |
+| Malayalam | 51 (15 vowels, 36 consonants) | ✅ |
 | Hindi | 46 (13 vowels, 33 consonants) | ✅ |
-| Tamil | 34 | free tracing over the font |
+| Tamil | 34 (12 vowels, 22 consonants) | ✅ |
 
 **Guided** means the app knows the real stroke order: a cartoon hand
 demonstrates each stroke, a dotted trail shows where to go, and each stroke is
-checked on its own. Tamil has no authored paths yet, so it falls back to
-tracing over the bundled glyph — deliberately, because a half-finished table is
-worse than the font fallback.
+checked on its own. Every character in every script is guided — nothing falls
+back to tracing over the bundled glyph.
 
 ## How a letter is learned
 
@@ -52,6 +51,7 @@ lib/
 │   ├── tracing/        letter_strokes.dart      Latin, shapes, lines
 │   │                   malayalam_strokes.dart   51 Malayalam paths
 │   │                   hindi_strokes.dart       46 Hindi paths
+│   │                   tamil_strokes.dart       34 Tamil paths
 │   ├── services/       update_checker, review_prompt, letter_audio, deep_link
 │   ├── router/         GoRouter navigation
 │   ├── theme/          AppTheme (Material 3)
