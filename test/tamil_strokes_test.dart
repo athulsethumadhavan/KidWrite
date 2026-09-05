@@ -38,7 +38,10 @@ void main() {
   // The consonants are being authored a few at a time. These are done; the
   // rest still fall back to the font, and asserting the boundary keeps a
   // half-finished one from shipping unnoticed. Move a letter up as it lands.
-  const guidedConsonants = {'க', 'ங', 'ச', 'ஞ', 'ட', 'ண', 'த', 'ந', 'ப', 'ம'};
+  const guidedConsonants = {
+    'க', 'ங', 'ச', 'ஞ', 'ட', 'ண', 'த', 'ந', 'ப', 'ம',
+    'ய', 'ர', 'ல', 'வ', 'ழ', 'ள', 'ற', 'ன', 'ஜ', 'ஷ',
+  };
 
   test('the finished consonants are guided', () {
     for (final c in tamil.where((c) => guidedConsonants.contains(c.symbol))) {
