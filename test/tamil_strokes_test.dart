@@ -35,29 +35,21 @@ void main() {
     }
   });
 
-  // The consonants are being authored a few at a time. These are done; the
-  // rest still fall back to the font, and asserting the boundary keeps a
-  // half-finished one from shipping unnoticed. Move a letter up as it lands.
-  const guidedConsonants = {
-    'க', 'ங', 'ச', 'ஞ', 'ட', 'ண', 'த', 'ந', 'ப', 'ம',
-    'ய', 'ர', 'ல', 'வ', 'ழ', 'ள', 'ற', 'ன', 'ஜ', 'ஷ',
-  };
-
-  test('the finished consonants are guided', () {
-    for (final c in tamil.where((c) => guidedConsonants.contains(c.symbol))) {
-      expect(TamilStrokes.of(c.symbol), isNotNull, reason: c.symbol);
+  // All twenty-two are done now, so nothing in Tamil falls back to the font.
+  // If one is ever added to the table ahead of its path, this catches it.
+  test('every consonant is guided', () {
+    final consonants = tamil.where(
+      (c) => c.category == CharacterCategory.consonant,
+    );
+    expect(consonants.length, 22);
+    for (final c in consonants) {
+      expect(
+        TamilStrokes.of(c.symbol),
+        isNotNull,
+        reason: '${c.symbol} would fall back to free tracing',
+      );
+      expect(TamilStrokes.shapeOf(c.symbol), isNotNull, reason: c.symbol);
       expect(TamilStrokes.bodyWidth(c.symbol), isNotNull, reason: c.symbol);
-    }
-  });
-
-  test('what is not guided yet is not half-guided either', () {
-    // A guessed stroke order is worse than the font fallback.
-    for (final c in tamil.where(
-      (c) =>
-          c.category == CharacterCategory.consonant &&
-          !guidedConsonants.contains(c.symbol),
-    )) {
-      expect(TamilStrokes.of(c.symbol), isNull, reason: c.symbol);
     }
   });
 
