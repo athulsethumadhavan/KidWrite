@@ -37,14 +37,35 @@ end
 
 platform :ios do
   before_all do
-    if ENV["APP_STORE_CONNECT_KEY_ID"]
+    # GitHub Actions sets an *unset* secret to the empty string rather than
+    # leaving it out, and "" is truthy in Ruby. So `if ENV[...]` passed with no
+    # key configured, and fastlane tried to build an EC key from "" — which
+    # fails deep inside OpenSSL as "invalid curve name", naming nothing useful.
+    # Treat blank as absent, and on CI say exactly which secret is missing.
+    creds = {
+      "APP_STORE_CONNECT_KEY_ID" => ENV["APP_STORE_CONNECT_KEY_ID"].to_s.strip,
+      "APP_STORE_CONNECT_ISSUER_ID" => ENV["APP_STORE_CONNECT_ISSUER_ID"].to_s.strip,
+      "APP_STORE_CONNECT_KEY_CONTENT" => ENV["APP_STORE_CONNECT_KEY_CONTENT"].to_s.strip
+    }
+    missing = creds.select { |_, v| v.empty? }.keys
+
+    if missing.empty?
       app_store_connect_api_key(
-        key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
-        issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
-        key_content: ENV["APP_STORE_CONNECT_KEY_CONTENT"],
+        key_id: creds["APP_STORE_CONNECT_KEY_ID"],
+        issuer_id: creds["APP_STORE_CONNECT_ISSUER_ID"],
+        key_content: creds["APP_STORE_CONNECT_KEY_CONTENT"],
         is_key_content_base64: true,
         in_house: false
       )
+    elsif ENV["CI"]
+      UI.user_error!(
+        "App Store Connect API key not configured. Missing repository " \
+        "secret(s): #{missing.join(', ')}. Add them under Settings → " \
+        "Secrets and variables → Actions."
+      )
+    else
+      # Locally there may be a signed-in Apple ID to fall back on.
+      UI.important("No App Store Connect API key; falling back to Apple ID login.")
     end
   end
 
