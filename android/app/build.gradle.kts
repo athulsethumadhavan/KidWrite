@@ -37,7 +37,14 @@ android {
         create("release") {
             keyAlias = keystoreProperties["keyAlias"] as? String
             keyPassword = keystoreProperties["keyPassword"] as? String
-            storeFile = file("/Users/athulappstation/Desktop/Personal/Project/KidWrite/android/kid_write-keystore.jks")
+            // Never an absolute path: this file is committed, and a path from
+            // one machine cannot exist on another. CI decodes the keystore
+            // secret to android/kid_write-keystore.jks, which is what
+            // rootProject.file resolves to here, so the default just works.
+            // Locally, override it with storeFile=... in local.properties if
+            // the keystore lives somewhere else.
+            storeFile = (keystoreProperties["storeFile"] as? String)?.let { file(it) }
+                ?: rootProject.file("kid_write-keystore.jks")
             storePassword = keystoreProperties["storePassword"] as? String
         }
     }
