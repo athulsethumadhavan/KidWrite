@@ -146,6 +146,14 @@ jobs:
           bundler-cache: true
           working-directory: ios
 
+      - name: CocoaPods for this Ruby
+        # The runner image ships CocoaPods installed against its own Ruby.
+        # setup-ruby puts a different one first on PATH, so `pod` can no longer
+        # load its gems — flutter reports "CocoaPods is installed but broken",
+        # skips pod install, and the archive fails with no pods linked.
+        # Installing it under the Ruby we actually run fixes that.
+        run: gem install cocoapods --no-document
+
       - name: Read access to the certificates repo
         # match clones a private repo over SSH. A deploy key scoped to that one
         # repo is the least it can be given.
