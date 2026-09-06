@@ -72,7 +72,7 @@ jobs:
   ios:
     name: App Store review
     if: ${{ inputs.ios }}
-    runs-on: macos-14
+    runs-on: macos-26
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
