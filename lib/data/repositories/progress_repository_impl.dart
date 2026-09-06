@@ -8,8 +8,7 @@ class ProgressRepositoryImpl implements ProgressRepository {
   ProgressRepositoryImpl({required this.dataSource});
 
   @override
-  Future<Progress?> getProgress(
-      String characterId, String languageId) async =>
+  Future<Progress?> getProgress(String characterId, String languageId) async =>
       dataSource.getProgress(characterId, languageId);
 
   @override

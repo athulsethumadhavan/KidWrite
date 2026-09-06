@@ -5,8 +5,8 @@ import 'package:in_app_review/in_app_review.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../constants/app_colors.dart';
-import '../constants/app_constants.dart';
+import '../Constants/app_colors.dart';
+import '../Constants/app_constants.dart';
 
 /// Asks the parent for a review once the child has finished a few letters —
 /// and only if they haven't reviewed (or opted out) already.
@@ -37,7 +37,8 @@ class ReviewPromptService {
     final levels = (prefs.getInt(AppConstants.prefLevelsCompleted) ?? 0) + 1;
     await prefs.setInt(AppConstants.prefLevelsCompleted, levels);
 
-    final nextAt = prefs.getInt(AppConstants.prefReviewNextAt) ??
+    final nextAt =
+        prefs.getInt(AppConstants.prefReviewNextAt) ??
         AppConstants.reviewFirstPromptAfter;
     return levels >= nextAt;
   }
@@ -54,8 +55,10 @@ class ReviewPromptService {
   static Future<void> _snooze() async {
     final prefs = await SharedPreferences.getInstance();
     final levels = prefs.getInt(AppConstants.prefLevelsCompleted) ?? 0;
-    await prefs.setInt(AppConstants.prefReviewNextAt,
-        levels + AppConstants.reviewSnoozeLevels);
+    await prefs.setInt(
+      AppConstants.prefReviewNextAt,
+      levels + AppConstants.reviewSnoozeLevels,
+    );
   }
 
   /// Shows the review / feedback sheet.
@@ -95,7 +98,8 @@ class ReviewPromptService {
           final uri = Uri(
             scheme: 'mailto',
             path: AppConstants.supportEmail,
-            query: 'subject=KidWrite Feedback'
+            query:
+                'subject=KidWrite Feedback'
                 '&body=Hi! Here is what could be better in KidWrite:\n\n',
           );
           try {
@@ -153,7 +157,7 @@ class _ReviewSheet extends StatelessWidget {
             const SizedBox(height: 8),
             const Text(
               'Your little one is doing great! A quick review helps other '
-                  'parents find KidWrite.',
+              'parents find KidWrite.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14.5,
@@ -226,12 +230,12 @@ class _ChoiceButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           boxShadow: filled
               ? [
-            BoxShadow(
-              color: color.withValues(alpha: 0.35),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ]
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.35),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
               : null,
         ),
         child: Column(

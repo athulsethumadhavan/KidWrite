@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../constants/app_colors.dart';
+import '../Constants/app_colors.dart';
 
 class AppTheme {
   AppTheme._();
@@ -20,9 +20,7 @@ class AppTheme {
       textTheme: _buildTextTheme(),
       cardTheme: CardThemeData(
         elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         color: AppColors.cardBg,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(

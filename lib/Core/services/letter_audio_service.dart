@@ -168,10 +168,14 @@ class LetterAudioService {
 
   static String _localeFor(String languageId) {
     switch (languageId) {
-      case 'malayalam': return 'ml-IN';
-      case 'hindi':     return 'hi-IN';
-      case 'tamil':     return 'ta-IN';
-      default:          return 'en-US';
+      case 'malayalam':
+        return 'ml-IN';
+      case 'hindi':
+        return 'hi-IN';
+      case 'tamil':
+        return 'ta-IN';
+      default:
+        return 'en-US';
     }
   }
 

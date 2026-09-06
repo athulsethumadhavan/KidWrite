@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../core/constants/app_colors.dart';
+import '../../Core/Constants/app_colors.dart';
 
 class MusicToggleButton extends StatelessWidget {
   final bool isEnabled;

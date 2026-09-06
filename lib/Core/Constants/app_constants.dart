@@ -3,6 +3,7 @@ class AppConstants {
 
   // App metadata
   static const String appName = 'KidWrite';
+
   /// Fallback only — the real version is read from the platform via
   /// package_info_plus (see AppInfo). Keep in sync with pubspec.yaml.
   static const String appVersion = '1.2.0';
@@ -68,7 +69,7 @@ class AppConstants {
 /// Supported language IDs
 class LanguageId {
   LanguageId._();
-  static const String english = 'english';        // legacy (kept for old progress)
+  static const String english = 'english'; // legacy (kept for old progress)
   static const String englishUpper = 'english_upper';
   static const String englishLower = 'english_lower';
   static const String malayalam = 'malayalam';

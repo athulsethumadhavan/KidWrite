@@ -19,8 +19,7 @@ class Progress extends Equatable {
 
   bool get isMastered => successCount >= 3 && bestAccuracy >= 0.8;
 
-  double get successRate =>
-      attemptCount == 0 ? 0 : successCount / attemptCount;
+  double get successRate => attemptCount == 0 ? 0 : successCount / attemptCount;
 
   Progress copyWith({
     int? attemptCount,

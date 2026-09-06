@@ -11,15 +11,11 @@ import '../../Presentation/pages/writing_practice_page.dart';
 final appRouter = GoRouter(
   initialLocation: '/',
   routes: [
-    GoRoute(
-      path: '/',
-      builder: (_, __) => const SplashPage(),
-    ),
+    GoRoute(path: '/', builder: (_, __) => const SplashPage()),
     GoRoute(
       path: '/onboarding',
-      builder: (context, __) => OnboardingPage(
-        onDone: () => context.go('/home'),
-      ),
+      builder: (context, __) =>
+          OnboardingPage(onDone: () => context.go('/home')),
     ),
     GoRoute(
       path: '/home',
@@ -29,9 +25,7 @@ final appRouter = GoRouter(
       path: '/characters/:languageId',
       pageBuilder: (_, state) => _slidePage(
         state,
-        CharacterListPage(
-          languageId: state.pathParameters['languageId']!,
-        ),
+        CharacterListPage(languageId: state.pathParameters['languageId']!),
       ),
     ),
     GoRoute(
@@ -56,12 +50,10 @@ CustomTransitionPage<void> _slidePage(GoRouterState state, Widget child) {
     child: child,
     transitionsBuilder: (_, animation, __, childWidget) {
       return SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(1.0, 0.0),
-          end: Offset.zero,
-        ).animate(
-          CurvedAnimation(parent: animation, curve: Curves.easeInOutCubic),
-        ),
+        position: Tween<Offset>(begin: const Offset(1.0, 0.0), end: Offset.zero)
+            .animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeInOutCubic),
+            ),
         child: childWidget,
       );
     },

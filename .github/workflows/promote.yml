@@ -1,0 +1,150 @@
+# Staged build → the stores. Manual, always.
+#
+# `release.yml` puts every merge to main on TestFlight and Play's internal
+# track. This workflow takes what is already sitting there and submits it for
+# review. Neither job rebuilds: the bytes that were tested on a device are the
+# bytes that ship.
+#
+# Publishing the site is the last step and depends on both submissions, because
+# stamping docs/version.json prompts every existing user to update. That must
+# not happen while the build is only on a test track.
+
+name: promote
+
+on:
+  workflow_dispatch:
+    inputs:
+      android:
+        description: "Promote the Play internal build to production (20% rollout)"
+        type: boolean
+        default: true
+      ios:
+        description: "Submit the TestFlight build for App Store review"
+        type: boolean
+        default: true
+      publish_docs:
+        description: "Stamp the version into docs/ and redeploy the site"
+        type: boolean
+        default: true
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  # ---------------------------------------------------------------------------
+  version:
+    name: Read the version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        run: |
+          line=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+          echo "version=${line%%+*}" >> "$GITHUB_OUTPUT"
+
+  # ---------------------------------------------------------------------------
+  android:
+    name: Play production
+    if: ${{ inputs.android }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: android
+
+      - name: Play Store service account
+        env:
+          PLAY_JSON: ${{ secrets.PLAY_STORE_JSON_KEY }}
+        run: echo "$PLAY_JSON" > android/fastlane/play-store-key.json
+
+      - name: Promote internal → production
+        working-directory: android
+        run: bundle exec fastlane production
+
+  # ---------------------------------------------------------------------------
+  ios:
+    name: App Store review
+    if: ${{ inputs.ios }}
+    runs-on: macos-14
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: ios
+
+      - name: Submit for review
+        working-directory: ios
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_ITC_TEAM_ID: ${{ secrets.APPLE_ITC_TEAM_ID }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_KEY_CONTENT }}
+        run: bundle exec fastlane release
+
+  # ---------------------------------------------------------------------------
+  docs:
+    name: Publish the site
+    needs: [version, android, ios]
+    # Runs even when one platform was skipped, but not when one failed.
+    if: ${{ always() && inputs.publish_docs && !contains(needs.*.result, 'failure') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Stamp the new version into the docs
+        env:
+          V: ${{ needs.version.outputs.version }}
+        run: |
+          # The feed the app polls. Reached only after both submissions, so it
+          # can never point at a build users cannot download yet.
+          python3 - <<PY
+          import json, pathlib
+          p = pathlib.Path("docs/version.json")
+          d = json.loads(p.read_text())
+          d["latest_version"] = "$V"
+          p.write_text(json.dumps(d, indent=2) + "\n")
+          PY
+
+          # Press kit: title, badge, screenshot caption, footer.
+          sed -i -E "s/KidWrite [0-9]+\.[0-9]+\.[0-9]+/KidWrite $V/g; \
+                     s/Version [0-9]+\.[0-9]+\.[0-9]+/Version $V/g" docs/index.html
+
+      - name: Commit if anything changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/
+          if git diff --cached --quiet; then
+            echo "docs already up to date"
+          else
+            git commit -m "docs: publish ${{ needs.version.outputs.version }}"
+            git push
+          fi
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - id: deployment
+        uses: actions/deploy-pages@v4

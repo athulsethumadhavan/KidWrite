@@ -132,7 +132,10 @@ class _TracingHandState extends State<TracingHand>
         final b = pts[i] - pts[i - 1];
         final na = a.distance, nb = b.distance;
         if (na > 0.01 && nb > 0.01) {
-          final cos = ((a.dx * b.dx + a.dy * b.dy) / (na * nb)).clamp(-1.0, 1.0);
+          final cos = ((a.dx * b.dx + a.dy * b.dy) / (na * nb)).clamp(
+            -1.0,
+            1.0,
+          );
           sharpness = (1 - cos) / 2;
         }
       }
@@ -282,13 +285,13 @@ class _TracingHandState extends State<TracingHand>
   /// somewhere else instead of finishing. Fade out on arrival, stay hidden
   /// through the pause, fade back in at the start of the next pass.
   double _opacityFor(double c) {
-    const traceEnd = 0.75;   // matches the Interval below
+    const traceEnd = 0.75; // matches the Interval below
     const gone = 0.86;
     const back = 0.97;
-    if (c < 0.05) return c / 0.05;                       // fading in
-    if (c <= traceEnd) return 1.0;                       // drawing
+    if (c < 0.05) return c / 0.05; // fading in
+    if (c <= traceEnd) return 1.0; // drawing
     if (c < gone) return 1.0 - (c - traceEnd) / (gone - traceEnd);
-    if (c < back) return 0.0;                            // resting, hidden
+    if (c < back) return 0.0; // resting, hidden
     return (c - back) / (1 - back);
   }
 
@@ -376,8 +379,7 @@ class _PointingHandPainter extends CustomPainter {
     canvas.drawPath(shadePath, shade);
 
     // Index finger — extended, pointing up.
-    final index = RRect.fromLTRBR(
-      30, 4, 46, 60, const Radius.circular(8));
+    final index = RRect.fromLTRBR(30, 4, 46, 60, const Radius.circular(8));
     canvas.drawRRect(index, fill);
 
     // Folded fingers, stepping down to the right.

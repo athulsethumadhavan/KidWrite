@@ -3,10 +3,10 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kid_write/Core/Constants/app_constants.dart';
 
-import '../../core/constants/app_colors.dart';
-import '../../core/widgets/animated_background.dart';
+import '../../Core/Constants/app_colors.dart';
+import '../../Core/widgets/animated_background.dart';
 import '../../injection_container.dart';
-import '../blocs/music/music_bloc.dart';
+import '../blocs/Music/music_bloc.dart';
 import 'onboarding_page.dart';
 
 class SplashPage extends StatefulWidget {
@@ -39,26 +39,23 @@ class _SplashPageState extends State<SplashPage> {
             children: [
               // App icon / mascot
               Container(
-                width: 140,
-                height: 140,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.4),
-                      blurRadius: 30,
-                      spreadRadius: 8,
+                    width: 140,
+                    height: 140,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.4),
+                          blurRadius: 30,
+                          spreadRadius: 8,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: const Center(
-                  child: Text(
-                    '✏️',
-                    style: TextStyle(fontSize: 72),
-                  ),
-                ),
-              )
+                    child: const Center(
+                      child: Text('✏️', style: TextStyle(fontSize: 72)),
+                    ),
+                  )
                   .animate()
                   .scale(duration: 600.ms, curve: Curves.elasticOut)
                   .fadeIn(duration: 400.ms),
@@ -66,12 +63,12 @@ class _SplashPageState extends State<SplashPage> {
               const SizedBox(height: 32),
 
               Text(
-                AppConstants.appName,
-                style: theme.textTheme.displayLarge?.copyWith(
-                  color: AppColors.primary,
-                  letterSpacing: -1,
-                ),
-              )
+                    AppConstants.appName,
+                    style: theme.textTheme.displayLarge?.copyWith(
+                      color: AppColors.primary,
+                      letterSpacing: -1,
+                    ),
+                  )
                   .animate()
                   .fadeIn(delay: 400.ms, duration: 500.ms)
                   .slideY(begin: 0.3, end: 0),
@@ -84,18 +81,14 @@ class _SplashPageState extends State<SplashPage> {
                   color: AppColors.textLight,
                 ),
                 textAlign: TextAlign.center,
-              )
-                  .animate()
-                  .fadeIn(delay: 600.ms, duration: 500.ms),
+              ).animate().fadeIn(delay: 600.ms, duration: 500.ms),
 
               const SizedBox(height: 60),
 
               const CircularProgressIndicator(
                 color: AppColors.primary,
                 strokeWidth: 3,
-              )
-                  .animate()
-                  .fadeIn(delay: 1000.ms),
+              ).animate().fadeIn(delay: 1000.ms),
             ],
           ),
         ),

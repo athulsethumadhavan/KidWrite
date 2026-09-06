@@ -15,8 +15,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<HomeSelectLanguage>(_onSelect);
   }
 
-  Future<void> _onLoad(
-      HomeLoadLanguages event, Emitter<HomeState> emit) async {
+  Future<void> _onLoad(HomeLoadLanguages event, Emitter<HomeState> emit) async {
     emit(const HomeLoading());
     try {
       final languages = await getLanguages();
@@ -29,10 +28,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   void _onSelect(HomeSelectLanguage event, Emitter<HomeState> emit) {
     if (state is HomeLoaded) {
       final current = state as HomeLoaded;
-      emit(HomeLoaded(
-        languages: current.languages,
-        selectedLanguageId: event.languageId,
-      ));
+      emit(
+        HomeLoaded(
+          languages: current.languages,
+          selectedLanguageId: event.languageId,
+        ),
+      );
     }
   }
 }

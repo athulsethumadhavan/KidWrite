@@ -2,13 +2,10 @@
 name: Deploy static content to Pages
 
 on:
-  # Runs on pushes targeting the default branch
-  push:
-    branches: ["main"]
-    paths:
-      - "docs/**"
-
-  # Allows you to run this workflow manually from the Actions tab
+  # Manual only. The release workflow deploys the site as its final step, after
+  # a successful store upload — two workflows both claiming the "pages"
+  # concurrency group would race each other. Use this to republish the site
+  # without shipping an app build.
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages

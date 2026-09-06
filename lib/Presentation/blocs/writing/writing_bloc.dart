@@ -4,8 +4,10 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kid_write/Core/Constants/app_constants.dart';
+import 'package:kid_write/Core/tracing/hindi_strokes.dart';
 import 'package:kid_write/Core/tracing/letter_strokes.dart';
 import 'package:kid_write/Core/tracing/malayalam_strokes.dart';
+import 'package:kid_write/Core/tracing/tamil_strokes.dart';
 
 import '../../../domain/entities/character.dart';
 
@@ -24,7 +26,9 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
   }
 
   Future<void> _onLoad(
-      WritingLoadCharacter event, Emitter<WritingState> emit) async {
+    WritingLoadCharacter event,
+    Emitter<WritingState> emit,
+  ) async {
     emit(WritingState(character: event.character, freeDraw: event.freeDraw));
     final guide = _guideStrokesFor(event.character);
     if (guide.isNotEmpty) {
@@ -33,12 +37,14 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
       // Mask from the full shape, so ink is accepted everywhere the letter is
       // drawn — including the stretches cut out of the guide.
       _buildMaskFromStrokes(shape.isEmpty ? guide : shape, body);
-      emit(state.copyWith(
-        guideStrokes: guide,
-        shapeStrokes: shape.isEmpty ? guide : shape,
-        targetStrokeIndex: 0,
-        glyphStrokeWidth: body,
-      ));
+      emit(
+        state.copyWith(
+          guideStrokes: guide,
+          shapeStrokes: shape.isEmpty ? guide : shape,
+          targetStrokeIndex: 0,
+          glyphStrokeWidth: body,
+        ),
+      );
       return;
     }
     final thickness = await _buildMask(event.character);
@@ -69,6 +75,14 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
     if (character.languageId == LanguageId.malayalam) {
       return MalayalamStrokes.of(character.symbol);
     }
+    if (character.languageId == LanguageId.hindi) {
+      return HindiStrokes.of(character.symbol);
+    }
+    // Tamil vowels only so far; the consonants have no table yet and fall
+    // through to free tracing over the Noto glyph.
+    if (character.languageId == LanguageId.tamil) {
+      return TamilStrokes.of(character.symbol);
+    }
     return null;
   }
 
@@ -81,6 +95,14 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
       return MalayalamStrokes.shapeOf(character.symbol) ??
           MalayalamStrokes.of(character.symbol);
     }
+    if (character.languageId == LanguageId.hindi) {
+      return HindiStrokes.shapeOf(character.symbol) ??
+          HindiStrokes.of(character.symbol);
+    }
+    if (character.languageId == LanguageId.tamil) {
+      return TamilStrokes.shapeOf(character.symbol) ??
+          TamilStrokes.of(character.symbol);
+    }
     return _craftedFor(character);
   }
 
@@ -88,9 +110,12 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
   /// letters differ hugely in width, so a single constant is far too fat for
   /// the wide ones and would let a child stray outside the letter.
   double _bodyWidthFor(Character character) {
-    final ml = character.languageId == LanguageId.malayalam
-        ? MalayalamStrokes.bodyWidth(character.symbol)
-        : null;
+    final ml = switch (character.languageId) {
+      LanguageId.malayalam => MalayalamStrokes.bodyWidth(character.symbol),
+      LanguageId.hindi => HindiStrokes.bodyWidth(character.symbol),
+      LanguageId.tamil => TamilStrokes.bodyWidth(character.symbol),
+      _ => null,
+    };
     // Wide letters squeeze down to a very thin measured stroke; keep a floor
     // so a four-year-old's finger still has something it can follow.
     final base = ml == null ? _craftedBodyBase : math.max(ml, _minBodyWidth);
@@ -103,10 +128,9 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
     const center = Offset(0.5, 0.5);
     return [
       for (final s in crafted)
-        _densifyPts(
-          [for (final p in s) center + (p - center) * _craftedScale],
-          2.0 / _res,
-        ),
+        _densifyPts([
+          for (final p in s) center + (p - center) * _craftedScale,
+        ], 2.0 / _res),
     ];
   }
 
@@ -162,41 +186,47 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
   }
 
   void _onStrokeStarted(
-      WritingStrokeStarted event, Emitter<WritingState> emit) {
+    WritingStrokeStarted event,
+    Emitter<WritingState> emit,
+  ) {
     // Self-heal: rebuild the mask if it's missing (e.g. after hot reload).
     if (_glyphMask == null && state.character != null && !_maskBuilding) {
       if (state.isGuided) {
         _buildMaskFromStrokes(
-            state.shapeStrokes.isEmpty
-                ? state.guideStrokes
-                : state.shapeStrokes,
-            _bodyWidthFor(state.character!));
+          state.shapeStrokes.isEmpty ? state.guideStrokes : state.shapeStrokes,
+          _bodyWidthFor(state.character!),
+        );
       } else {
         _maskBuilding = true;
-        _buildMask(state.character!)
-            .whenComplete(() => _maskBuilding = false);
+        _buildMask(state.character!).whenComplete(() => _maskBuilding = false);
       }
     }
     // Ink only registers inside the letter shape.
     if (!_insideGlyph(event.point, event.canvasSize)) return;
-    emit(state.copyWith(
-      currentStroke: [event.point],
-      status: WritingStatus.drawing,
-      strokeMissed: false,
-    ));
+    emit(
+      state.copyWith(
+        currentStroke: [event.point],
+        status: WritingStatus.drawing,
+        strokeMissed: false,
+      ),
+    );
   }
 
   void _onStrokeUpdated(
-      WritingStrokeUpdated event, Emitter<WritingState> emit) {
+    WritingStrokeUpdated event,
+    Emitter<WritingState> emit,
+  ) {
     final inside = _insideGlyph(event.point, event.canvasSize);
 
     // Finger started outside the letter and just entered it.
     if (state.currentStroke.isEmpty) {
       if (inside) {
-        emit(state.copyWith(
-          currentStroke: [event.point],
-          status: WritingStatus.drawing,
-        ));
+        emit(
+          state.copyWith(
+            currentStroke: [event.point],
+            status: WritingStatus.drawing,
+          ),
+        );
       }
       return;
     }
@@ -210,25 +240,21 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
     if ((event.point - last).distance > event.canvasSize * 0.08) {
       final allStrokes = List<List<Offset>>.from(state.strokes)
         ..add(List.from(state.currentStroke));
-      emit(state.copyWith(
-        strokes: allStrokes,
-        currentStroke: [event.point],
-      ));
+      emit(state.copyWith(strokes: allStrokes, currentStroke: [event.point]));
       return;
     }
 
-    final updated = List<Offset>.from(state.currentStroke)
-      ..add(event.point);
+    final updated = List<Offset>.from(state.currentStroke)..add(event.point);
     emit(state.copyWith(currentStroke: updated));
   }
 
-  void _onStrokeEnded(
-      WritingStrokeEnded event, Emitter<WritingState> emit) {
+  void _onStrokeEnded(WritingStrokeEnded event, Emitter<WritingState> emit) {
     if (state.currentStroke.isEmpty) return;
 
     // ── Free-draw challenge: order doesn't matter. Keep every stroke and
     // succeed as soon as the drawing covers the whole letter. ──
-    if (state.isGuided && state.freeDraw &&
+    if (state.isGuided &&
+        state.freeDraw &&
         state.status != WritingStatus.success) {
       final size = event.canvasSize.width;
       final allStrokes = List<List<Offset>>.from(state.strokes)
@@ -236,9 +262,7 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
 
       final drawn = <Offset>[for (final s in allStrokes) ...s];
       final targets = state.guideStrokes
-          .map((g) => g
-          .map((p) => Offset(p.dx * size, p.dy * size))
-          .toList())
+          .map((g) => g.map((p) => Offset(p.dx * size, p.dy * size)).toList())
           .toList();
 
       // Every guide stroke must be substantially covered by the child's ink.
@@ -259,15 +283,16 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
       }
 
       final done = worst >= 0.8;
-      emit(state.copyWith(
-        strokes: allStrokes,
-        currentStroke: [],
-        accuracy: worst,
-        status: done ? WritingStatus.success : WritingStatus.idle,
-        attemptCount:
-        done ? state.attemptCount + 1 : state.attemptCount,
-        strokeMissed: false,
-      ));
+      emit(
+        state.copyWith(
+          strokes: allStrokes,
+          currentStroke: [],
+          accuracy: worst,
+          status: done ? WritingStatus.success : WritingStatus.idle,
+          attemptCount: done ? state.attemptCount + 1 : state.attemptCount,
+          strokeMissed: false,
+        ),
+      );
       return;
     }
 
@@ -289,22 +314,27 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
         final newAccuracy =
             (state.accuracy * state.targetStrokeIndex + match) / nextIndex;
         final finished = nextIndex >= state.guideStrokes.length;
-        emit(state.copyWith(
-          strokes: allStrokes,
-          currentStroke: [],
-          targetStrokeIndex: nextIndex,
-          accuracy: newAccuracy,
-          status: finished ? WritingStatus.success : WritingStatus.idle,
-          attemptCount:
-          finished ? state.attemptCount + 1 : state.attemptCount,
-        ));
+        emit(
+          state.copyWith(
+            strokes: allStrokes,
+            currentStroke: [],
+            targetStrokeIndex: nextIndex,
+            accuracy: newAccuracy,
+            status: finished ? WritingStatus.success : WritingStatus.idle,
+            attemptCount: finished
+                ? state.attemptCount + 1
+                : state.attemptCount,
+          ),
+        );
       } else {
         // Didn't follow the demonstrated line — discard and replay demo.
-        emit(state.copyWith(
-          currentStroke: [],
-          status: WritingStatus.idle,
-          strokeMissed: true,
-        ));
+        emit(
+          state.copyWith(
+            currentStroke: [],
+            status: WritingStatus.idle,
+            strokeMissed: true,
+          ),
+        );
       }
       return;
     }
@@ -363,7 +393,9 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
   }
 
   Future<void> _onCheckAccuracy(
-      WritingCheckAccuracy event, Emitter<WritingState> emit) async {
+    WritingCheckAccuracy event,
+    Emitter<WritingState> emit,
+  ) async {
     // Finalise any in-progress stroke (finger still down when Done! tapped)
     var strokes = state.strokes;
     if (state.currentStroke.isNotEmpty) {
@@ -382,28 +414,34 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
     );
 
     final isSuccess = accuracy >= AppConstants.successThreshold;
-    emit(state.copyWith(
-      strokes: strokes,
-      currentStroke: [],
-      status: isSuccess ? WritingStatus.success : WritingStatus.failure,
-      accuracy: accuracy,
-      attemptCount: state.attemptCount + 1,
-    ));
+    emit(
+      state.copyWith(
+        strokes: strokes,
+        currentStroke: [],
+        status: isSuccess ? WritingStatus.success : WritingStatus.failure,
+        accuracy: accuracy,
+        attemptCount: state.attemptCount + 1,
+      ),
+    );
   }
 
   void _onClear(WritingClear event, Emitter<WritingState> emit) {
-    emit(state.copyWith(
-      strokes: [],
-      currentStroke: [],
-      status: WritingStatus.idle,
-      accuracy: 0,
-      targetStrokeIndex: 0,
-      strokeMissed: false,
-    ));
+    emit(
+      state.copyWith(
+        strokes: [],
+        currentStroke: [],
+        status: WritingStatus.idle,
+        accuracy: 0,
+        targetStrokeIndex: 0,
+        strokeMissed: false,
+      ),
+    );
   }
 
   Future<void> _onNext(
-      WritingNextCharacter event, Emitter<WritingState> emit) async {
+    WritingNextCharacter event,
+    Emitter<WritingState> emit,
+  ) async {
     emit(WritingState(character: event.character, freeDraw: event.freeDraw));
     final guide = _guideStrokesFor(event.character);
     if (guide.isNotEmpty) {
@@ -412,12 +450,14 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
       // Mask from the full shape, so ink is accepted everywhere the letter is
       // drawn — including the stretches cut out of the guide.
       _buildMaskFromStrokes(shape.isEmpty ? guide : shape, body);
-      emit(state.copyWith(
-        guideStrokes: guide,
-        shapeStrokes: shape.isEmpty ? guide : shape,
-        targetStrokeIndex: 0,
-        glyphStrokeWidth: body,
-      ));
+      emit(
+        state.copyWith(
+          guideStrokes: guide,
+          shapeStrokes: shape.isEmpty ? guide : shape,
+          targetStrokeIndex: 0,
+          glyphStrokeWidth: body,
+        ),
+      );
       return;
     }
     final thickness = await _buildMask(event.character);
@@ -470,8 +510,9 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
       offCanvas.scale(scale);
       tp.paint(offCanvas, Offset(-tp.width / 2, -tp.height / 2));
       final image = await recorder.endRecording().toImage(_res, _res);
-      final byteData =
-      await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+      final byteData = await image.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      );
       image.dispose();
       if (byteData == null) return 0;
 
@@ -610,8 +651,9 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
 
       final picture = recorder.endRecording();
       final image = await picture.toImage(_res, _res);
-      final byteData =
-      await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+      final byteData = await image.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      );
       image.dispose();
 
       if (byteData == null) return _fallback(strokes, canvasSize);
@@ -635,10 +677,12 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
       final samples = <List<double>>[]; // [x, y, dx, dy] in grid coords
       for (final s in strokes) {
         final grid = s
-            .map((p) => Offset(
-          p.dx / canvasSize.width * _res,
-          p.dy / canvasSize.height * _res,
-        ))
+            .map(
+              (p) => Offset(
+                p.dx / canvasSize.width * _res,
+                p.dy / canvasSize.height * _res,
+              ),
+            )
             .toList();
         final r = _resamplePoints(grid, 5.0);
         for (int i = 1; i < r.length; i++) {
@@ -785,8 +829,14 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
     bool on(int x, int y) =>
         x >= 0 && x < w && y >= 0 && y < h && skel[y * w + x];
     const neigh = [
-      [0, -1], [1, -1], [1, 0], [1, 1],
-      [0, 1], [-1, 1], [-1, 0], [-1, -1],
+      [0, -1],
+      [1, -1],
+      [1, 0],
+      [1, 1],
+      [0, 1],
+      [-1, 1],
+      [-1, 0],
+      [-1, -1],
     ];
     List<int> nbrs(int x, int y) => [
       for (final o in neigh)
@@ -842,9 +892,7 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
     }
 
     // Pure loops (rings with no endpoints/junctions, e.g. O).
-    final inBranches = <int>{
-      for (final b in branches) ...b,
-    };
+    final inBranches = <int>{for (final b in branches) ...b};
     for (final entry in degree.entries) {
       if (entry.value != 2 || inBranches.contains(entry.key)) continue;
       final start = entry.key;
@@ -897,8 +945,7 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
         for (int b = a + 1; b < nb.length; b++) {
           final ax = nb[a] % w, ay = nb[a] ~/ w;
           final bx = nb[b] % w, by = nb[b] ~/ w;
-          final d = ((ax - bx) * (ax - bx) + (ay - by) * (ay - by))
-              .toDouble();
+          final d = ((ax - bx) * (ax - bx) + (ay - by) * (ay - by)).toDouble();
           if (d > bestD) {
             bestD = d;
             bestA = nb[a];
@@ -927,8 +974,8 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
       if (p.dx > maxX) maxX = p.dx;
       if (p.dy > maxY) maxY = p.dy;
     }
-    final coverage = (maxX - minX) * (maxY - minY) /
-        (canvasSize.width * canvasSize.height);
+    final coverage =
+        (maxX - minX) * (maxY - minY) / (canvasSize.width * canvasSize.height);
     return (coverage * 0.6).clamp(0.0, 0.80);
   }
 
@@ -945,4 +992,3 @@ class WritingBloc extends Bloc<WritingEvent, WritingState> {
     return map[languageId];
   }
 }
-

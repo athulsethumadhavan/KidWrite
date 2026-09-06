@@ -11,9 +11,6 @@ class GetCharacters {
   final CharacterRepository _repository;
   const GetCharacters(this._repository);
 
-  Future<List<Character>> call(GetCharactersParams params) =>
-      _repository.getCharacters(
-        languageId: params.languageId,
-        category: params.category,
-      );
+  Future<List<Character>> call(GetCharactersParams params) => _repository
+      .getCharacters(languageId: params.languageId, category: params.category);
 }

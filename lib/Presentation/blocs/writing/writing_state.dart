@@ -6,10 +6,10 @@ enum WritingStatus { idle, drawing, checking, success, failure }
 
 class WritingState extends Equatable {
   final Character? character;
-  final List<List<Offset>> strokes;     // each sub-list is one stroke
+  final List<List<Offset>> strokes; // each sub-list is one stroke
   final List<Offset> currentStroke;
   final WritingStatus status;
-  final double accuracy;                // 0.0 – 1.0
+  final double accuracy; // 0.0 – 1.0
   final int attemptCount;
 
   /// Average thickness of the letter's own strokes, as a fraction of the
@@ -68,21 +68,20 @@ class WritingState extends Equatable {
     int? targetStrokeIndex,
     bool? strokeMissed,
     bool? freeDraw,
-  }) =>
-      WritingState(
-        character: character ?? this.character,
-        strokes: strokes ?? this.strokes,
-        currentStroke: currentStroke ?? this.currentStroke,
-        status: status ?? this.status,
-        accuracy: accuracy ?? this.accuracy,
-        attemptCount: attemptCount ?? this.attemptCount,
-        glyphStrokeWidth: glyphStrokeWidth ?? this.glyphStrokeWidth,
-        guideStrokes: guideStrokes ?? this.guideStrokes,
-        shapeStrokes: shapeStrokes ?? this.shapeStrokes,
-        targetStrokeIndex: targetStrokeIndex ?? this.targetStrokeIndex,
-        strokeMissed: strokeMissed ?? this.strokeMissed,
-        freeDraw: freeDraw ?? this.freeDraw,
-      );
+  }) => WritingState(
+    character: character ?? this.character,
+    strokes: strokes ?? this.strokes,
+    currentStroke: currentStroke ?? this.currentStroke,
+    status: status ?? this.status,
+    accuracy: accuracy ?? this.accuracy,
+    attemptCount: attemptCount ?? this.attemptCount,
+    glyphStrokeWidth: glyphStrokeWidth ?? this.glyphStrokeWidth,
+    guideStrokes: guideStrokes ?? this.guideStrokes,
+    shapeStrokes: shapeStrokes ?? this.shapeStrokes,
+    targetStrokeIndex: targetStrokeIndex ?? this.targetStrokeIndex,
+    strokeMissed: strokeMissed ?? this.strokeMissed,
+    freeDraw: freeDraw ?? this.freeDraw,
+  );
 
   @override
   List<Object?> get props => [
