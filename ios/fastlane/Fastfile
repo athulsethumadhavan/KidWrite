@@ -105,16 +105,23 @@ platform :ios do
 
     signing
 
-    Dir.chdir(APP_ROOT) do
-      sh("flutter", "clean")
-      sh("flutter", "pub", "get")
-      # Flutter drives the Xcode build; skip its own codesign so fastlane can
-      # do it with the profile it just fetched. The version is passed
-      # explicitly so iOS keeps its own build numbering — see the top of this
-      # file. flutter writes both into Generated.xcconfig, which is where the
-      # Xcode project reads them from, so build_app below inherits them.
-      sh("flutter", "build", "ipa", "--release", "--no-codesign",
-         "--build-name=#{version}", "--build-number=#{build_number}")
+    # Outside fastlane's bundle. `bundle exec fastlane` restricts GEM_PATH and
+    # sets RUBYOPT=-rbundler/setup, and every child process inherits that — so
+    # when flutter shells out to `pod`, CocoaPods is refused for not being in
+    # this Gemfile. flutter reports that as "CocoaPods is installed but
+    # broken", skips pod install, and the archive fails with nothing linked.
+    Bundler.with_unbundled_env do
+      Dir.chdir(APP_ROOT) do
+        sh("flutter", "clean")
+        sh("flutter", "pub", "get")
+        # Flutter drives the Xcode build; skip its own codesign so fastlane can
+        # do it with the profile it just fetched. The version is passed
+        # explicitly so iOS keeps its own build numbering — see the top of this
+        # file. flutter writes both into Generated.xcconfig, which is where the
+        # Xcode project reads them from, so build_app below inherits them.
+        sh("flutter", "build", "ipa", "--release", "--no-codesign",
+           "--build-name=#{version}", "--build-number=#{build_number}")
+      end
     end
 
     build_app(
