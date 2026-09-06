@@ -24,6 +24,10 @@ on:
         description: "Skip the iOS upload"
         type: boolean
         default: false
+      skip_android:
+        description: "Skip the Play upload"
+        type: boolean
+        default: false
 
 concurrency:
   group: release
@@ -74,6 +78,14 @@ jobs:
   android:
     name: Play internal track
     needs: test
+    # A versionCode can only be uploaded to Play once, so a re-run after a
+    # successful Android upload always fails. `inputs` only exist for a manual
+    # run, and a merge is a push — hence the commit-message escape: put
+    # [skip android] in the merge commit to fix an iOS-only problem without
+    # Play rejecting the duplicate.
+    if: >-
+      ${{ !inputs.skip_android &&
+          !contains(github.event.head_commit.message, '[skip android]') }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
